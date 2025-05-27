@@ -1,6 +1,8 @@
 micronaut:
   application:
     name: prova-estapar
+  server:
+    port: 3003
 
 netty:
   default:

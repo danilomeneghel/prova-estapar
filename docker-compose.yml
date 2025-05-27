@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: postgres_estapar
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: parking
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  garage-simulador:
+    image: cfontes0estapar/garage-sim:1.0.0
+    container_name: garage_simulator_estapar
+    ports:
+      - "8080:3000"
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_estapar
+    environment:
+      - MICRONAUT_ENVIRONMENTS=docker
+      - DATASOURCES_DEFAULT_URL=jdbc:postgresql://postgres:5432/parking
+      - DATASOURCES_DEFAULT_USERNAME=postgres
+      - DATASOURCES_DEFAULT_PASSWORD=postgres
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
