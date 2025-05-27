@@ -1,0 +1,24 @@
+micronaut:
+  application:
+    name: prova-estapar
+
+netty:
+  default:
+    allocator:
+      max-order: 3
+
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/estapar
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+    schema-generate: UPDATE
+    dialect: POSTGRES
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
