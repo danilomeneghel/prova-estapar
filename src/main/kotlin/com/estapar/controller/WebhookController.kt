@@ -4,13 +4,17 @@ import com.estapar.service.GarageService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import java.time.Instant
+import io.micronaut.validation.Validated
+import javax.validation.Valid
 
+@Validated
 @Controller("/webhook")
 class WebhookController(
     private val garageService: GarageService
 ) {
+
     @Post
-    fun receive(@Body payload: Map<String, Any>): HttpResponse<Any> {
+    fun receive(@Body @Valid payload: Map<String, Any>): HttpResponse<Any> {
         val eventType = payload["event_type"] as? String ?: return HttpResponse.badRequest()
         when (eventType) {
             "ENTRY" -> {
@@ -32,4 +36,5 @@ class WebhookController(
         }
         return HttpResponse.ok()
     }
+    
 }

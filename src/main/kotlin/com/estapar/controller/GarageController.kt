@@ -3,17 +3,20 @@ package com.estapar.controller
 import com.estapar.service.GarageService
 import io.micronaut.http.annotation.*
 import java.time.LocalDate
+import io.micronaut.validation.Validated
+import javax.validation.Valid
 
+@Validated
 @Controller("/api")
 class GarageController(
     private val garageService: GarageService
 ) {
     @Post("/plate-status")
-    fun plateStatus(@Body body: Map<String, String>) =
+    fun plateStatus(@Body @Valid body: Map<String, String>) =
         garageService.getStatusByPlate(body["license_plate"] ?: "")
 
     @Post("/spot-status")
-    fun spotStatus(@Body body: Map<String, Double>) =
+    fun spotStatus(@Body @Valid body: Map<String, Double>) =
         garageService.getStatusBySpot(body["lat"] ?: 0.0, body["lng"] ?: 0.0)
 
     @Get("/revenue")

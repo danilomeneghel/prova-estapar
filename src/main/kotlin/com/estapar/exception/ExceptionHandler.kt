@@ -16,7 +16,7 @@ import javax.validation.ConstraintViolationException
 @Singleton
 @Requires(classes = [EntityNotFoundException::class, ExceptionHandler::class, Exception::class, ConstraintViolationException::class])
 @Replaces(ConstraintExceptionHandler::class)
-class ToDoExceptionHandler: ExceptionHandler<Exception, HttpResponse<*>> {
+class ExceptionHandler: ExceptionHandler<Exception, HttpResponse<*>> {
 
     @Error(global = true, exception = Exception::class)
     override fun handle(request: HttpRequest<*>?, exception: Exception?): HttpResponse<ErrorMessage> {
