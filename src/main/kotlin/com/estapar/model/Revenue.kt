@@ -1,7 +1,7 @@
 package com.estapar.model
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import javax.persistence.*
+import jakarta.persistence.*
 import java.time.LocalDate
 
 @Entity

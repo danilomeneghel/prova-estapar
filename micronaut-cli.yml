@@ -1,6 +1,6 @@
 applicationType: default
-defaultPackage: com.mrcruz.todo
+defaultPackage: com.example
 testFramework: junit
 sourceLanguage: kotlin
-buildTool: gradle_kotlin
-features: [annotation-api, app-name, data, data-jpa, gradle, h2, http-client, jackson-databind, jdbc-hikari, junit, kotlin, kotlin-application, kotlin-build, logback, micronaut-build, mockito, netty-server, readme, shade, yaml]
+buildTool: gradle
+features: [annotation-api, app-name, data, data-jpa, gradle, http-client-test, jackson-databind, jdbc-hikari, junit, kapt, kotlin, kotlin-application, logback, micronaut-aot, micronaut-build, micronaut-http-validation, mockito, netty-server, openapi, postgres, readme, shade, static-resources, swagger-ui, test-resources, validation, yaml, yaml-build]

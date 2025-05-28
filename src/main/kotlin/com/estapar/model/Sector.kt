@@ -1,6 +1,6 @@
 package com.estapar.model
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 class Sector(
