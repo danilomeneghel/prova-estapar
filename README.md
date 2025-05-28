@@ -250,6 +250,12 @@ Response
 }
 ```
 
+## Swagger
+
+Documentação da API RESTful:<br>
+
+http://localhost:3003/swagger-ui
+
 
 ## Licença
 

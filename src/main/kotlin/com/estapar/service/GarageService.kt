@@ -61,8 +61,8 @@ class GarageService(
         entryRepo.deleteById(plate)
     }
 
-    fun getStatusByPlate(plate: String): Map<String, Any?> {
-        val entry = entryRepo.findById(plate).orElse(null) ?: return emptyMap()
+    fun postPlateStatus(licensePlate: String): Map<String, Any?> {
+        val entry = entryRepo.findById(licensePlate).orElse(null) ?: return emptyMap()
         val now = Instant.now()
         val duration = ((now.toEpochMilli() - (entry.parkedTime ?: entry.entryTime).toEpochMilli()) / 60000).toInt()
         val basePrice = entry.spot?.sector?.basePrice ?: 0.0
@@ -78,7 +78,7 @@ class GarageService(
         )
     }
 
-    fun getStatusBySpot(lat: Double, lng: Double): Map<String, Any?> {
+    fun postSpotStatus(lat: Double, lng: Double): Map<String, Any?> {
         val spot = spotRepo.findByLatAndLng(lat, lng) ?: return emptyMap()
         val entry = entryRepo.findAll().find { it.spot?.id == spot.id }
         val now = Instant.now()
@@ -105,7 +105,7 @@ class GarageService(
         )
     }
 
-    fun getGarageStatus(): Map<String, Any> {
+    fun getGarage(): Map<String, Any> {
         val sectors = sectorRepo.findAll().map {
             mapOf(
                 "sector" to it.name,

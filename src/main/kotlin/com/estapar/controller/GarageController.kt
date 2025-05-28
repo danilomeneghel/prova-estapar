@@ -10,11 +10,11 @@ class GarageController(
 ) {
     @Post("/plate-status")
     fun plateStatus(@Body body: Map<String, String>) =
-        garageService.getStatusByPlate(body["license_plate"] ?: "")
+        garageService.postPlateStatus(body["license_plate"] ?: "")
 
     @Post("/spot-status")
     fun spotStatus(@Body body: Map<String, Double>) =
-        garageService.getStatusBySpot(body["lat"] ?: 0.0, body["lng"] ?: 0.0)
+        garageService.postSpotStatus(body["lat"] ?: 0.0, body["lng"] ?: 0.0)
 
     @Get("/revenue")
     fun revenue(@QueryValue date: String, @QueryValue sector: String): Map<String, Any> {
@@ -24,6 +24,6 @@ class GarageController(
 
     @Get("/garage")
     fun garageStatus(): Map<String, Any> =
-        garageService.getGarageStatus()
+        garageService.getGarage()
     
 }
