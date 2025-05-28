@@ -4,15 +4,25 @@ Este é o teste para Desevolvedor Java/Kotlin da Estapar.
 
 O objetivo é criar um sistema de gestão de estacionamentos, que controla o número de vagas em aberto, entrada, saida e faturamento do setor.
 
-## Requisitos técnicos
+## Requisitos Técnicos
 
 * Kotlin 1.9.10
 * Java JDK 21
-* Framework Micronaut 4.8.2
-* Banco de Dados Postgres 14
+* Gradle 4.4.1
+* PostgreSql 14
 * Docker 28.0.1
 
+## Tecnologias Utilizadas
+
+* Framework Micronaut
+* Kotlin
+* Gradle
+* PostgreSql
+* Swagger-UI
+* Docker Compose
+
 ## Instalação 
+
 ```
 git clone https://github.com/danilomeneghel/prova-estapar.git
 
@@ -239,3 +249,14 @@ Response
   "timestamp": "2025-01-01T12:00:00.000Z"
 }
 ```
+
+
+## Licença
+
+Projeto licenciado sob <a href="LICENSE">The MIT License (MIT)</a>.<br><br>
+
+
+Desenvolvido por<br>
+Danilo Meneghel<br>
+danilo.meneghel@gmail.com<br>
+http://danilomeneghel.github.io/<br>
