@@ -5,7 +5,7 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 
 @Controller("/webhook")
-class WebhookController(
+class WebhookGarageController(
     private val webhookService: WebhookService
 ) {
 

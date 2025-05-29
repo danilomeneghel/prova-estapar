@@ -5,7 +5,6 @@ import java.time.Instant
 
 @Serdeable
 data class ExitEventDTO(
-    val eventType: String, 
     val licensePlate: String,
     val exitTime: Instant
 )

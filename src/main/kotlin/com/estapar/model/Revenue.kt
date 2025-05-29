@@ -5,10 +5,10 @@ import jakarta.persistence.*
 import java.time.LocalDate
 
 @Entity
-class Revenue(
+data class Revenue(
     @Id
     @GeneratedValue
-    val id: Long? = null,
+    var id: Long? = null,
     var sectorName: String,
     var amount: Double,
     @JsonFormat(pattern = "yyyy-MM-dd")

@@ -3,10 +3,10 @@ package com.estapar.model
 import jakarta.persistence.*
 
 @Entity
-class Sector(
+data class Sector(
     @Id
     @GeneratedValue
-    val id: Long? = null,
+    var id: Long? = null,
     val name: String,
     val basePrice: Double,
     val maxCapacity: Int,

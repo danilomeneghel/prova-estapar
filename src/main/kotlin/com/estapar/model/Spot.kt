@@ -3,10 +3,10 @@ package com.estapar.model
 import jakarta.persistence.*
 
 @Entity
-class Spot(
+data class Spot(
     @Id
     @GeneratedValue
-    val id: Long? = null,
+    var id: Long? = null,
     var lat: Double,
     var lng: Double,
     var ocupied: Boolean = false,

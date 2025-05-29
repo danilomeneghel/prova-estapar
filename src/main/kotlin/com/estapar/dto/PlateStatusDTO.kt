@@ -5,7 +5,7 @@ import java.time.Instant
 
 @Serdeable
 data class PlateStatusDTO(
-    val licensePlate: String,
+    val licensePlate: String?,
     val priceUntilNow: Double,
     val entryTime: Instant?,
     val timeParked: Instant?,
