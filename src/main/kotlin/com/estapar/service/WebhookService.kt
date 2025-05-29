@@ -14,7 +14,7 @@ open class WebhookService(
 
     fun processWebhookEvent(payload: Map<String, Any>): Map<String, Any> {
         val eventType = payload["event_type"] as? String
-        val licensePlate = payload["getlicense_plate"] as? String
+        val licensePlate = payload["license_plate"] as? String // CORRIGIDO AQUI
         val lat = (payload["lat"] as? Number)?.toDouble()
         val lng = (payload["lng"] as? Number)?.toDouble()
 
