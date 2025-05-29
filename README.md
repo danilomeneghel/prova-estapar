@@ -46,6 +46,14 @@ Para encerrar tudo digite:
 docker compose down
 ```
 
+## Testes
+
+Para realizar os testes, execute o seguinte comando no terminal:
+
+```
+./gradlew test
+```
+
 ## Simulador
 
 Vamos prover um docker com o simulador, ele sobe e após 2 segundos começa e enviar eventos de entradas e saidas 
@@ -255,6 +263,24 @@ Response
 Documentação da API RESTful:<br>
 
 http://localhost:3003/swagger-ui
+
+
+## Screenshots
+
+WebHook <br>
+![Screenshots](screenshots/screenshot01.png) <br><br>
+
+Swagger-UI <br>
+![Screenshots](screenshots/screenshot02.png) <br><br>
+
+Modelagem ER <br>
+![Screenshots](screenshots/screenshot03.png) <br><br>
+
+Testes Unitários <br>
+![Screenshots](screenshots/screenshot04.png) <br><br>
+
+Aplicação Micronaut <br>
+![Screenshots](screenshots/screenshot05.png) <br><br>
 
 
 ## Licença
