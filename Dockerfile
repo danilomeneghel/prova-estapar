@@ -4,14 +4,14 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./mvnw clean package -DskipTests
+RUN ./gradlew clean build -x test
 
 FROM eclipse-temurin:21-jdk
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/build/libs/prova-estapar-1.1-all.jar app.jar
 
-EXPOSE 8080
+EXPOSE 3003
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

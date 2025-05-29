@@ -2,18 +2,24 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:14
+    image: postgres:16
     container_name: postgres_estapar
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: parking
+      POSTGRES_DB: estapar
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   garage-simulador:
     image: cfontes0estapar/garage-sim:1.0.0
@@ -21,6 +27,8 @@ services:
     ports:
       - "8080:3000"
     restart: unless-stopped
+    networks:
+      - app-network
 
   app:
     build:
@@ -29,13 +37,14 @@ services:
     container_name: app_estapar
     environment:
       - MICRONAUT_ENVIRONMENTS=docker
-      - DATASOURCES_DEFAULT_URL=jdbc:postgresql://postgres:5432/parking
+      - DATASOURCES_DEFAULT_URL=jdbc:postgresql://postgres:5432/estapar
       - DATASOURCES_DEFAULT_USERNAME=postgres
       - DATASOURCES_DEFAULT_PASSWORD=postgres
     ports:
       - "3003:3003"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -44,3 +53,4 @@ volumes:
 
 networks:
   app-network:
+    driver: bridge
