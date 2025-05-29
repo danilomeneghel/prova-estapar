@@ -13,35 +13,51 @@ import com.estapar.dto.RevenueDTO
 import com.estapar.dto.GarageInfoDTO
 import com.estapar.dto.SectorInfo
 import com.estapar.dto.SpotInfo
+import io.micronaut.transaction.annotation.Transactional
 
 @Singleton
-class GarageService(
+open class GarageService(
     private val sectorRepo: SectorRepository,
     private val spotRepo: SpotRepository,
     private val entryRepo: VehicleEntryRepository,
     private val revenueRepo: RevenueRepository,
     private val objectMapper: ObjectMapper
 ) {
-    fun registerEntry(plate: String, entryTime: Instant) {
+    @Transactional
+    open fun registerEntry(plate: String, entryTime: Instant) {
         if (entryRepo.existsById(plate)) return
         entryRepo.save(VehicleEntry(plate, entryTime))
     }
 
-    fun assignSpot(plate: String, lat: Double, lng: Double) {
-        val entry = entryRepo.findById(plate).orElse(null) ?: return
-        val spot = spotRepo.findByLatAndLng(lat, lng) ?: return
-        if (spot.ocupied) return
+    @Transactional
+    open fun assignSpot(plate: String, lat: Double, lng: Double) {
+        val entry = entryRepo.findById(plate).orElse(null)
+        if (entry == null) {
+            return
+        }
+
+        val spot = spotRepo.findByLatAndLng(lat, lng)
+
+        if (spot == null || spot.ocupied) {
+            return
+        }
+
         spot.ocupied = true
+        spotRepo.save(spot)
+
         entry.parkedTime = Instant.now()
         entry.spot = spot
+        entryRepo.save(entry)
+
         val sector = spot.sector
-        if (sector.currentOcupied < sector.maxCapacity) sector.currentOcupied++
-        spotRepo.update(spot)
-        sectorRepo.update(sector)
-        entryRepo.update(entry)
+        if (sector.currentOcupied < sector.maxCapacity) {
+            sector.currentOcupied++
+            sectorRepo.save(sector)
+        }
     }
 
-    fun handleExit(plate: String, exitTime: Instant) {
+    @Transactional
+    open fun handleExit(plate: String, exitTime: Instant) {
         val entry = entryRepo.findById(plate).orElse(null) ?: return
         val spot = entry.spot ?: return
         val basePrice = spot.sector.basePrice

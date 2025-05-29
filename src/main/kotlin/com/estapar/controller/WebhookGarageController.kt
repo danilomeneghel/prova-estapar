@@ -3,6 +3,7 @@ package com.estapar.controller
 import com.estapar.service.WebhookService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
+import com.fasterxml.jackson.databind.ObjectMapper
 
 @Controller("/webhook")
 class WebhookGarageController(
@@ -10,14 +11,16 @@ class WebhookGarageController(
 ) {
 
     @Post
-    fun receive(@Body payload: Map<String, Any>): HttpResponse<Any> {
+    fun receive(@Body payload: Map<String, Any>): HttpResponse<Map<String, Any>> {
         return try {
-            webhookService.processWebhookEvent(payload)
-            HttpResponse.ok()
+            val responsePayload = webhookService.processWebhookEvent(payload)
+            HttpResponse.ok(responsePayload)
         } catch (e: IllegalArgumentException) {
-            HttpResponse.badRequest("Invalid event payload: ${e.message}")
+            HttpResponse.badRequest(mapOf("error" to "Invalid event payload: ${e.message}"))
+        } catch (e: RuntimeException) {
+            HttpResponse.serverError(mapOf("error" to "Failed to persist data: ${e.message}"))
         } catch (e: Exception) {
-            HttpResponse.serverError("An unexpected error occurred: ${e.message}")
+            HttpResponse.serverError(mapOf("error" to "An unexpected error occurred: ${e.message}"))
         }
     }
 }

@@ -70,9 +70,9 @@ class GarageServiceTest {
         assertThat(mockEntry.parkedTime).isNotNull()
         assertThat(mockSector.currentOcupied).isEqualTo(6)
 
-        verify(spotRepo).update(eq(mockSpot))
-        verify(sectorRepo).update(eq(mockSector))
-        verify(entryRepo).update(eq(mockEntry))
+        verify(spotRepo).save(eq(mockSpot))
+        verify(sectorRepo).save(eq(mockSector))
+        verify(entryRepo).save(eq(mockEntry))
     }
 
     @Test
@@ -82,13 +82,14 @@ class GarageServiceTest {
         val lng = 20.0
 
         whenever(entryRepo.findById(plate)).thenReturn(Optional.empty())
+        // REMOVIDO: whenever(spotRepo.findByLatAndLng(any(), any())).thenReturn(null)
 
         garageService.assignSpot(plate, lat, lng)
 
         verify(spotRepo, never()).findByLatAndLng(any(), any())
-        verify(spotRepo, never()).update(any())
-        verify(sectorRepo, never()).update(any())
-        verify(entryRepo, never()).update(any())
+        verify(spotRepo, never()).save(any())
+        verify(sectorRepo, never()).save(any())
+        verify(entryRepo, never()).save(any())
     }
 
     @Test
@@ -104,9 +105,9 @@ class GarageServiceTest {
 
         garageService.assignSpot(plate, lat, lng)
 
-        verify(spotRepo, never()).update(any())
-        verify(sectorRepo, never()).update(any())
-        verify(entryRepo, never()).update(any())
+        verify(spotRepo, never()).save(any())
+        verify(sectorRepo, never()).save(any())
+        verify(entryRepo, never()).save(any())
     }
 
     @Test
@@ -124,9 +125,9 @@ class GarageServiceTest {
 
         garageService.assignSpot(plate, lat, lng)
 
-        verify(spotRepo, never()).update(any())
-        verify(sectorRepo, never()).update(any())
-        verify(entryRepo, never()).update(any())
+        verify(spotRepo, never()).save(any())
+        verify(sectorRepo, never()).save(any())
+        verify(entryRepo, never()).save(any())
     }
 
     @Test
