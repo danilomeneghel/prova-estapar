@@ -7,9 +7,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.estapar.dto.EntryEventDTO
-import com.estapar.dto.ParkedEventDTO
-import com.estapar.dto.ExitEventDTO
 import com.estapar.dto.PlateStatusDTO
 import com.estapar.dto.SpotStatusDTO
 import com.estapar.dto.RevenueDTO
@@ -25,27 +22,6 @@ class GarageService(
     private val revenueRepo: RevenueRepository,
     private val objectMapper: ObjectMapper
 ) {
-    fun processWebhookEvent(payload: Map<String, Any>) {
-        val eventType = payload["event_type"] as? String
-            ?: throw IllegalArgumentException("Missing 'event_type' in payload.")
-
-        when (eventType) {
-            "ENTRY" -> {
-                val entryEvent = objectMapper.convertValue(payload, EntryEventDTO::class.java)
-                registerEntry(entryEvent.licensePlate, entryEvent.entryTime)
-            }
-            "PARKED" -> {
-                val parkedEvent = objectMapper.convertValue(payload, ParkedEventDTO::class.java)
-                assignSpot(parkedEvent.licensePlate, parkedEvent.lat, parkedEvent.lng)
-            }
-            "EXIT" -> {
-                val exitEvent = objectMapper.convertValue(payload, ExitEventDTO::class.java)
-                handleExit(exitEvent.licensePlate, exitEvent.exitTime)
-            }
-            else -> throw IllegalArgumentException("Unknown event_type: $eventType")
-        }
-    }
-
     fun registerEntry(plate: String, entryTime: Instant) {
         if (entryRepo.existsById(plate)) return
         entryRepo.save(VehicleEntry(plate, entryTime))
