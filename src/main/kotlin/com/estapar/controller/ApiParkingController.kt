@@ -1,12 +1,11 @@
 package com.estapar.controller
 
+import com.estapar.dto.*
 import com.estapar.service.GarageService
-import io.micronaut.http.annotation.*
-import java.time.LocalDate
-import com.estapar.dto.PlateStatusDTO
-import com.estapar.dto.SpotStatusDTO
-import com.estapar.dto.RevenueDTO
-import com.estapar.dto.GarageInfoDTO
+import io.micronaut.http.annotation.Body
+import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Get
+import io.micronaut.http.annotation.Post
 
 @Controller("/api")
 class ApiParkingController(
@@ -22,10 +21,9 @@ class ApiParkingController(
         return garageService.postSpotStatus(body["lat"] ?: 0.0, body["lng"] ?: 0.0)
     }
 
-    @Get("/revenue")
-    fun revenue(@QueryValue date: String, @QueryValue sector: String): RevenueDTO {
-        val parsedDate = LocalDate.parse(date)
-        return garageService.getRevenue(parsedDate, sector)
+    @Post("/revenue")
+    fun revenue(@Body revenueRequest: RevenueRequestDTO): RevenueDTO {
+        return garageService.getRevenue(revenueRequest.date, revenueRequest.sector)
     }
 
     @Get("/garage")

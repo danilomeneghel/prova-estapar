@@ -244,7 +244,7 @@ Response - 200
 
 ### Consulta faturamento
 
-**GET**
+**POST**
 `/revenue`
 
 Request
