@@ -7,7 +7,7 @@ import java.time.LocalDate
 @Entity
 data class Revenue(
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
     var sectorName: String,
     var amount: Double,

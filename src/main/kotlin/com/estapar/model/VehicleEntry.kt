@@ -6,11 +6,14 @@ import java.time.Instant
 @Entity
 data class VehicleEntry(
     @Id
-    val licensePlate: String,
+    var licensePlate: String,
     val entryTime: Instant,
     var parkedTime: Instant? = null,
     @ManyToOne(fetch = FetchType.EAGER)
-    var spot: Spot? = null
+    @JoinColumn(name = "spot_id")
+    var spot: Spot? = null,
+    var exitTime: Instant? = null,
+    var status: String = "ENTRY"
 ) {
-    constructor() : this("", Instant.EPOCH, null, null)
+    constructor() : this("", Instant.EPOCH, null, null, null, "ENTRY")
 }

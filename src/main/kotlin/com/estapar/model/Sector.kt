@@ -5,7 +5,7 @@ import jakarta.persistence.*
 @Entity
 data class Sector(
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
     val name: String,
     val basePrice: Double,

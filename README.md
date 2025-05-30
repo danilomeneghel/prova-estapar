@@ -134,7 +134,7 @@ Sua app deve aceitar conexões pelo url http://localhost:3003/webhook
 **WEBHOOK - POST**
 ```JSON
 {		
-  "license_plate": "",
+  "license_plate": "ZUL0001",
   "exit_time": "2025-01-01T12:00:00.000Z",
   "event_type": "EXIT"
 }
