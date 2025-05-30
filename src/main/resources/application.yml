@@ -21,7 +21,7 @@ netty:
 
 datasources:
   default:
-    url: jdbc:postgresql://localhost:5432/estapar
+    url: jdbc:postgresql://postgres_estapar:5432/estapar
     username: postgres
     password: postgres
     driverClassName: org.postgresql.Driver

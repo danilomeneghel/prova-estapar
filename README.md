@@ -34,7 +34,7 @@ cd prova-estapar
 Para rodar o projeto via Docker, bastar executar o seguinte comando:
 
 ```
-docker compose up --build
+docker compose up
 ```
 
 Aguarde baixar as dependências e carregar todo o projeto, esse processo é demorado.
@@ -44,6 +44,16 @@ Para encerrar tudo digite:
 
 ```
 docker compose down
+```
+
+## Gradle
+
+Caso não tenho o Docker instalado e queira rodar diretamente a aplicação, altere o arquivo application.xml com o Host e Credenciais do banco de dados PostgreSql que irá conectar.
+
+Após feito isso, execute o seguinte comando no terminal:
+
+```
+./gradlew clear run
 ```
 
 ## Testes
@@ -72,17 +82,13 @@ O Simulador pode ser rodado com:
 O sistema deve importar os dados geolocalizados de vagas e setores e armazenar em um banco de dados as informações.
 Vagas podem ter metadados associados como preço, datas, horário de funcionamento e duração da estádia.
 
-Crie um sistema que gerência o uso e faturamento deste setor de estacionamento, não precisamos de UI por enquanto 
-somete o backend e api REST, mas já será disponibilizada para uso na garagem piloto.
+Crie um sistema que gerência o uso e faturamento deste setor de estacionamento, não precisamos de UI por enquanto somente o backend e API REST, mas já será disponibilizada para uso na garagem piloto.
 
-Os dados da garagem são obtidos pelo endpoint de ```/garage``` e 
-deve estar apto a receber por webhook entradas e saidas dos veículos por JSON com a API descrita abaixo.
+Os dados da garagem são obtidos pelo endpoint de ```/garage``` e deve estar apto a receber por webhook entradas e saidas dos veículos por JSON com a API descrita abaixo.
 
-Uma garagem é composta por uma cancela automática, utilizadas para entrar e sair e sensores de presença nas vagas 
-que analisam a presença ou ausência de um veículo na vaga.
+Uma garagem é composta por uma cancela automática, utilizadas para entrar e sair e sensores de presença nas vagas que analisam a presença ou ausência de um veículo na vaga.
 
-Após uma chamada ao endpoint de dados ```/garage``` a garagem é aberta e o sistema é liberado para entrada e
-saída de veículos, veja que podemos ter mais de uma cancela automática no mesmo estacionamento ou por setor.
+Após uma chamada ao endpoint de dados ```/garage``` a garagem é aberta e o sistema é liberado para entrada e saída de veículos, veja que podemos ter mais de uma cancela automática no mesmo estacionamento ou por setor.
 
 Mesmo para sensores de solo que podem ser acionados em conjunto se varios carros estacionarem ao mesmo tempo.
 
