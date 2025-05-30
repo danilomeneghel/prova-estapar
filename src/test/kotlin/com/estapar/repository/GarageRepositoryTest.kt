@@ -1,98 +1,111 @@
 package com.estapar.repository
 
-import com.estapar.model.Spot
-import com.estapar.model.Sector
 import com.estapar.model.Garage
+import com.estapar.model.Sector
+import com.estapar.model.Spot
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import jakarta.inject.Inject
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
 import java.time.Instant
-import java.util.Optional
-import org.assertj.core.api.Assertions.assertThat
 
-@ExtendWith(MockitoExtension::class)
+@MicronautTest(environments = ["test"])
 class GarageRepositoryTest {
 
-    @Mock
-    private lateinit var garageRepository: GarageRepository
+    @Inject
+    lateinit var garageRepository: GarageRepository
+
+    @Inject
+    lateinit var spotRepository: SpotRepository
+    @Inject
+    lateinit var sectorRepository: SectorRepository
+
+    private lateinit var testSector: Sector
+    private lateinit var testSpot: Spot
+
+    @BeforeEach
+    fun setup() {
+        garageRepository.deleteAll()
+        spotRepository.deleteAll()
+        sectorRepository.deleteAll()
+
+        testSector = Sector(name = "Test Sector", basePrice = 5.0, maxCapacity = 10, openHour = "06:00", closeHour = "22:00", durationLimitMinutes = 180)
+        testSector = sectorRepository.save(testSector)
+
+        testSpot = Spot(lat = 10.0, lng = 20.0, ocupied = false, sector = testSector)
+        testSpot = spotRepository.save(testSpot)
+    }
 
     @Test
     fun findByIdShouldReturnOptionalOfVehicleEntryWhenFound() {
         val licensePlate = "ABC1234"
-        val expectedEntry = Garage(licensePlate = licensePlate, entryTime = Instant.now())
-
-        whenever(garageRepository.findById(licensePlate)).thenReturn(Optional.of(expectedEntry))
+        val entryTime = Instant.now()
+        val expectedEntry = Garage(licensePlate = licensePlate, entryTime = entryTime)
+        garageRepository.save(expectedEntry)
 
         val result = garageRepository.findById(licensePlate)
 
-        assertThat(result).isEqualTo(Optional.of(expectedEntry))
-        verify(garageRepository).findById(eq(licensePlate))
+        assertTrue(result.isPresent)
+        assertEquals(licensePlate, result.get().licensePlate)
+        assertEquals(entryTime.epochSecond, result.get().entryTime.epochSecond)
     }
 
     @Test
     fun saveShouldPersistANewVehicleEntry() {
         val newEntry = Garage(licensePlate = "NEW4567", entryTime = Instant.now())
 
-        whenever(garageRepository.save(argThat { entry -> entry.licensePlate == newEntry.licensePlate && entry.entryTime == newEntry.entryTime }))
-            .doAnswer { invocation ->
-                invocation.getArgument<Garage>(0)
-            }
-
         val result = garageRepository.save(newEntry)
 
-        assertThat(result.licensePlate).isEqualTo(newEntry.licensePlate)
-        assertThat(result.entryTime).isEqualTo(newEntry.entryTime)
-        assertThat(result).isEqualTo(newEntry)
+        assertNotNull(result.licensePlate)
+        assertEquals(newEntry.licensePlate, result.licensePlate)
+        assertEquals(newEntry.entryTime.epochSecond, result.entryTime.epochSecond)
+        assertTrue(garageRepository.existsById(newEntry.licensePlate))
     }
 
     @Test
     fun deleteByIdShouldRemoveVehicleEntryByLicensePlate() {
         val licensePlateToDelete = "DEL7890"
+        val entryToDelete = Garage(licensePlate = licensePlateToDelete, entryTime = Instant.now())
+        garageRepository.save(entryToDelete)
+
+        assertTrue(garageRepository.existsById(licensePlateToDelete))
 
         garageRepository.deleteById(licensePlateToDelete)
 
-        verify(garageRepository).deleteById(eq(licensePlateToDelete))
+        assertFalse(garageRepository.existsById(licensePlateToDelete))
     }
 
     @Test
     fun existsByIdShouldReturnTrueIfEntryExists() {
         val licensePlate = "EXIST111"
-        whenever(garageRepository.existsById(licensePlate)).thenReturn(true)
+        val existingEntry = Garage(licensePlate = licensePlate, entryTime = Instant.now())
+        garageRepository.save(existingEntry)
 
         val result = garageRepository.existsById(licensePlate)
 
-        assertThat(result).isTrue()
-        verify(garageRepository).existsById(eq(licensePlate))
+        assertTrue(result)
     }
 
     @Test
     fun existsByIdShouldReturnFalseIfEntryDoesNotExist() {
         val licensePlate = "NONEXIST222"
-        whenever(garageRepository.existsById(licensePlate)).thenReturn(false)
-
         val result = garageRepository.existsById(licensePlate)
 
-        assertThat(result).isFalse()
-        verify(garageRepository).existsById(eq(licensePlate))
+        assertFalse(result)
     }
 
     @Test
     fun findAllShouldReturnAllVehicleEntries() {
-        val mockSector = Sector(id = 100L, name = "Parking", basePrice = 5.0, maxCapacity = 10, openHour = "06", closeHour = "22", durationLimitMinutes = 180)
-        val mockSpot1 = Spot(id = 1L, sector = mockSector, lat = 10.0, lng = 20.0, ocupied = true)
-        val mockSpot2 = Spot(id = 2L, sector = mockSector, lat = 11.0, lng = 21.0, ocupied = false)
+        val entry1 = Garage(licensePlate = "VEH001", entryTime = Instant.now().minusSeconds(3600), spot = testSpot, parkedTime = Instant.now().minusSeconds(3000))
+        val entry2 = Garage(licensePlate = "VEH002", entryTime = Instant.now().minusSeconds(1800), spot = testSpot, parkedTime = Instant.now().minusSeconds(1200))
 
-        val entries = listOf(
-            Garage(licensePlate = "VEH001", entryTime = Instant.now().minusSeconds(3600), spot = mockSpot1, parkedTime = Instant.now().minusSeconds(3000)),
-            Garage(licensePlate = "VEH002", entryTime = Instant.now().minusSeconds(1800), spot = mockSpot2, parkedTime = Instant.now().minusSeconds(1200))
-        )
-        whenever(garageRepository.findAll()).thenReturn(entries)
+        garageRepository.saveAll(listOf(entry1, entry2))
 
-        val result = garageRepository.findAll()
+        val result = garageRepository.findAll().toList()
 
-        assertThat(result).isEqualTo(entries)
-        verify(garageRepository).findAll()
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.licensePlate == "VEH001" })
+        assertTrue(result.any { it.licensePlate == "VEH002" })
     }
 }

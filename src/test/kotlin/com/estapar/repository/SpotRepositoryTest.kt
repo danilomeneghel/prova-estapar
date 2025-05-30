@@ -2,105 +2,157 @@ package com.estapar.repository
 
 import com.estapar.model.Sector
 import com.estapar.model.Spot
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import jakarta.inject.Inject
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
-import java.util.Optional
-import org.assertj.core.api.Assertions.assertThat
+import java.util.UUID
 
-@ExtendWith(MockitoExtension::class)
+@MicronautTest(environments = ["test"])
 class SpotRepositoryTest {
 
-    @Mock
-    private lateinit var spotRepository: SpotRepository
+    @Inject
+    lateinit var spotRepository: SpotRepository
 
-    @Test
-    fun findByLatAndLngShouldReturnSpotWhenFound() {
-        val lat = -23.5
-        val lng = -46.6
-        val mockSector = Sector(id = 1L, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300)
-        val expectedSpot = Spot(id = 1, sector = mockSector, lat = lat, lng = lng, ocupied = false)
+    @Inject
+    lateinit var sectorRepository: SectorRepository
 
-        whenever(spotRepository.findByLatAndLng(lat, lng)).thenReturn(expectedSpot)
+    private lateinit var testSector: Sector
 
-        val result = spotRepository.findByLatAndLng(lat, lng)
+    @BeforeEach
+    fun setup() {
+        spotRepository.deleteAll()
+        sectorRepository.deleteAll()
 
-        assertThat(result).isEqualTo(expectedSpot)
-        verify(spotRepository).findByLatAndLng(eq(lat), eq(lng))
+        testSector = Sector(
+            name = "Setor Teste Spot-${UUID.randomUUID()}",
+            basePrice = 10.0,
+            maxCapacity = 10,
+            openHour = "08:00",
+            closeHour = "18:00",
+            durationLimitMinutes = 180
+        )
+        testSector = sectorRepository.save(testSector)
     }
 
     @Test
-    fun findByLatAndLngShouldReturnNullWhenNotFound() {
-        val lat = -99.0
-        val lng = -99.0
+    fun saveShouldPersistNewSpot() {
+        val newSpot = Spot(
+            lat = 1.0,
+            lng = 2.0,
+            ocupied = false,
+            sector = testSector
+        )
 
-        whenever(spotRepository.findByLatAndLng(lat, lng)).thenReturn(null)
+        val savedSpot = spotRepository.save(newSpot)
 
-        val result = spotRepository.findByLatAndLng(lat, lng)
-
-        assertThat(result).isNull()
-        verify(spotRepository).findByLatAndLng(eq(lat), eq(lng))
+        assertNotNull(savedSpot.id)
+        assertEquals(newSpot.lat, savedSpot.lat, 0.001)
+        assertEquals(newSpot.lng, savedSpot.lng, 0.001)
+        assertEquals(newSpot.ocupied, savedSpot.ocupied)
+        assertEquals(newSpot.sector.id, savedSpot.sector.id)
     }
 
     @Test
     fun findByIdShouldReturnOptionalOfSpotWhenFound() {
-        val id = 1L
-        val mockSector = Sector(id = 1L, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300)
-        val expectedSpot = Spot(id = id, sector = mockSector, lat = 1.0, lng = 2.0, ocupied = true)
+        val existingSpot = Spot(
+            lat = 3.0,
+            lng = 4.0,
+            ocupied = true,
+            sector = testSector
+        )
+        val savedSpot = spotRepository.save(existingSpot)
 
-        whenever(spotRepository.findById(id)).thenReturn(Optional.of(expectedSpot))
+        val foundSpotOptional = spotRepository.findById(savedSpot.id!!)
 
-        val result = spotRepository.findById(id)
-
-        assertThat(result).isEqualTo(Optional.of(expectedSpot))
-        verify(spotRepository).findById(eq(id))
+        assertTrue(foundSpotOptional.isPresent)
+        val foundSpot = foundSpotOptional.get()
+        assertEquals(savedSpot.id, foundSpot.id)
+        assertEquals(existingSpot.lat, foundSpot.lat, 0.001)
+        assertEquals(existingSpot.lng, foundSpot.lng, 0.001)
     }
 
     @Test
-    fun saveShouldPersistANewSpot() {
-        val mockSector = Sector(id = 1L, name = "B", basePrice = 20.0, maxCapacity = 50, openHour = "09", closeHour = "18", durationLimitMinutes = 240)
-        val newSpot = Spot(sector = mockSector, lat = 3.0, lng = 4.0, ocupied = false)
+    fun findByIdShouldReturnEmptyOptionalWhenNotFound() {
+        val foundSpotOptional = spotRepository.findById(999L)
 
-        whenever(spotRepository.save(argThat { spot -> spot.lat == newSpot.lat && spot.lng == newSpot.lng && spot.ocupied == newSpot.ocupied && spot.sector == newSpot.sector }))
-            .doAnswer { invocation ->
-                val spotArg = invocation.getArgument<Spot>(0)
-                spotArg.id = 1L
-                spotArg
-            }
-
-        val result = spotRepository.save(newSpot)
-
-        assertThat(result.id).isNotNull()
-        assertThat(result.id).isEqualTo(1L)
-        assertThat(result.lat).isEqualTo(newSpot.lat)
-        assertThat(result.lng).isEqualTo(newSpot.lng)
-        verify(spotRepository).save(argThat { spot -> spot.lat == newSpot.lat && spot.lng == newSpot.lng && spot.ocupied == newSpot.ocupied && spot.sector == newSpot.sector })
+        assertFalse(foundSpotOptional.isPresent)
     }
 
     @Test
-    fun deleteByIdShouldRemoveSpotById() {
-        val idToDelete = 1L
+    fun findByLatAndLngShouldReturnSpotWhenFound() {
+        val lat = 5.0
+        val lng = 6.0
+        val existingSpot = Spot(
+            lat = lat,
+            lng = lng,
+            ocupied = false,
+            sector = testSector
+        )
+        spotRepository.save(existingSpot)
 
-        spotRepository.deleteById(idToDelete)
+        val foundSpot = spotRepository.findByLatAndLng(lat, lng)
 
-        verify(spotRepository).deleteById(eq(idToDelete))
+        assertNotNull(foundSpot)
+        assertEquals(lat, foundSpot!!.lat, 0.001)
+        assertEquals(lng, foundSpot.lng, 0.001)
+        assertEquals(existingSpot.sector.id, foundSpot.sector.id)
+    }
+
+    @Test
+    fun findByLatAndLngShouldReturnNullWhenNotFound() {
+        val foundSpot = spotRepository.findByLatAndLng(99.0, 99.0)
+
+        assertNull(foundSpot)
+    }
+
+    @Test
+    fun updateShouldModifyExistingSpot() {
+        val initialSpot = Spot(
+            lat = 7.0,
+            lng = 8.0,
+            ocupied = false,
+            sector = testSector
+        )
+        val savedSpot = spotRepository.save(initialSpot)
+
+        val updatedOcupied = true
+        val spotToUpdate = savedSpot.copy(ocupied = updatedOcupied)
+        val updatedSpot = spotRepository.update(spotToUpdate)
+
+        assertNotNull(updatedSpot)
+        assertEquals(savedSpot.id, updatedSpot.id)
+        assertEquals(updatedOcupied, updatedSpot.ocupied)
+    }
+
+    @Test
+    fun deleteShouldRemoveSpot() {
+        val spotToDelete = Spot(
+            lat = 9.0,
+            lng = 10.0,
+            ocupied = false,
+            sector = testSector
+        )
+        val savedSpot = spotRepository.save(spotToDelete)
+
+        assertNotNull(spotRepository.findById(savedSpot.id!!))
+
+        spotRepository.delete(savedSpot)
+
+        assertFalse(spotRepository.findById(savedSpot.id!!).isPresent)
     }
 
     @Test
     fun findAllShouldReturnAllSpots() {
-        val mockSector1 = Sector(id = 10L, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300)
-        val mockSector2 = Sector(id = 20L, name = "B", basePrice = 20.0, maxCapacity = 50, openHour = "09", closeHour = "18", durationLimitMinutes = 240)
-        val spots = listOf(
-            Spot(id = 1L, sector = mockSector1, lat = 1.0, lng = 1.0, ocupied = false),
-            Spot(id = 2L, sector = mockSector2, lat = 2.0, lng = 2.0, ocupied = true)
-        )
-        whenever(spotRepository.findAll()).thenReturn(spots)
+        val spot1 = Spot(lat = 11.0, lng = 12.0, ocupied = false, sector = testSector)
+        val spot2 = Spot(lat = 13.0, lng = 14.0, ocupied = true, sector = testSector)
+        spotRepository.saveAll(listOf(spot1, spot2))
 
-        val result = spotRepository.findAll()
+        val allSpots = spotRepository.findAll().toList()
 
-        assertThat(result).isEqualTo(spots)
-        verify(spotRepository).findAll()
+        assertEquals(2, allSpots.size)
+        assertTrue(allSpots.any { it.lat == 11.0 && it.lng == 12.0 })
+        assertTrue(allSpots.any { it.lat == 13.0 && it.lng == 14.0 })
     }
 }

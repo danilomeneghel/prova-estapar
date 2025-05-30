@@ -7,6 +7,7 @@ data class Sector(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
+    @Column(nullable = false)
     val name: String,
     val basePrice: Double,
     val maxCapacity: Int,

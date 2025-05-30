@@ -1,102 +1,131 @@
 package com.estapar.repository
 
 import com.estapar.model.Revenue
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import jakarta.inject.Inject
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
 import java.time.LocalDate
-import java.util.Optional
-import org.assertj.core.api.Assertions.assertThat
 
-@ExtendWith(MockitoExtension::class)
+@MicronautTest(environments = ["test"])
 class RevenueRepositoryTest {
 
-    @Mock
-    private lateinit var revenueRepository: RevenueRepository
+    @Inject
+    lateinit var revenueRepository: RevenueRepository
 
-    @Test
-    fun findByDateAndSectorNameShouldReturnRevenueWhenFound() {
-        val date = LocalDate.of(2024, 5, 29)
-        val sectorName = "TestSector"
-        val expectedRevenue = Revenue(id = 1L, date = date, sectorName = sectorName, amount = 150.0)
-
-        whenever(revenueRepository.findByDateAndSectorName(date, sectorName)).thenReturn(expectedRevenue)
-
-        val result = revenueRepository.findByDateAndSectorName(date, sectorName)
-
-        assertThat(result).isEqualTo(expectedRevenue)
-        verify(revenueRepository).findByDateAndSectorName(eq(date), eq(sectorName))
+    @BeforeEach
+    fun setup() {
+        revenueRepository.deleteAll()
     }
 
     @Test
-    fun findByDateAndSectorNameShouldReturnNullWhenNotFound() {
-        val date = LocalDate.of(2024, 5, 30)
-        val sectorName = "NonExistentSector"
+    fun saveShouldPersistNewRevenue() {
+        val date = LocalDate.now()
+        val sectorName = "Centro"
+        val amount = 150.75
+        val newRevenue = Revenue(sectorName = sectorName, amount = amount, date = date)
 
-        whenever(revenueRepository.findByDateAndSectorName(date, sectorName)).thenReturn(null)
+        val savedRevenue = revenueRepository.save(newRevenue)
 
-        val result = revenueRepository.findByDateAndSectorName(date, sectorName)
-
-        assertThat(result).isNull()
-        verify(revenueRepository).findByDateAndSectorName(eq(date), eq(sectorName))
+        assertNotNull(savedRevenue.id)
+        assertEquals(sectorName, savedRevenue.sectorName)
+        assertEquals(amount, savedRevenue.amount, 0.001)
+        assertEquals(date, savedRevenue.date)
     }
 
     @Test
     fun findByIdShouldReturnOptionalOfRevenueWhenFound() {
-        val id = 1L
-        val expectedRevenue = Revenue(id = id, date = LocalDate.now(), sectorName = "A", amount = 100.0)
+        val date = LocalDate.now().minusDays(1)
+        val sectorName = "Setor A"
+        val amount = 200.00
+        val existingRevenue = Revenue(sectorName = sectorName, amount = amount, date = date)
+        val savedRevenue = revenueRepository.save(existingRevenue)
 
-        whenever(revenueRepository.findById(id)).thenReturn(Optional.of(expectedRevenue))
+        val foundRevenueOptional = revenueRepository.findById(savedRevenue.id!!)
 
-        val result = revenueRepository.findById(id)
-
-        assertThat(result).isEqualTo(Optional.of(expectedRevenue))
-        verify(revenueRepository).findById(eq(id))
+        assertTrue(foundRevenueOptional.isPresent)
+        val foundRevenue = foundRevenueOptional.get()
+        assertEquals(savedRevenue.id, foundRevenue.id)
+        assertEquals(sectorName, foundRevenue.sectorName)
+        assertEquals(amount, foundRevenue.amount, 0.001)
+        assertEquals(date, foundRevenue.date)
     }
 
     @Test
-    fun saveShouldPersistANewRevenue() {
-        val newRevenue = Revenue(date = LocalDate.now(), sectorName = "New", amount = 50.0)
+    fun findByIdShouldReturnEmptyOptionalWhenNotFound() {
+        val foundRevenueOptional = revenueRepository.findById(999L)
 
-        whenever(revenueRepository.save(argThat { entity -> entity.date == newRevenue.date && entity.sectorName == newRevenue.sectorName && entity.amount == newRevenue.amount }))
-            .doAnswer { invocation ->
-                val revenueArg = invocation.getArgument<Revenue>(0)
-                revenueArg.id = 1L
-                revenueArg
-            }
-
-        val result = revenueRepository.save(newRevenue)
-
-        assertThat(result.id).isNotNull()
-        assertThat(result.id).isEqualTo(1L)
-        assertThat(result.date).isEqualTo(newRevenue.date)
-        assertThat(result.sectorName).isEqualTo(newRevenue.sectorName)
-        assertThat(result.amount).isEqualTo(newRevenue.amount)
-        verify(revenueRepository).save(argThat { entity -> entity.date == newRevenue.date && entity.sectorName == newRevenue.sectorName && entity.amount == newRevenue.amount })
+        assertFalse(foundRevenueOptional.isPresent)
     }
 
     @Test
-    fun deleteByIdShouldRemoveRevenueById() {
-        val idToDelete = 1L
+    fun findByDateAndSectorNameShouldReturnRevenueWhenFound() {
+        val date = LocalDate.now()
+        val sectorName = "Setor B"
+        val amount = 50.50
+        val existingRevenue = Revenue(sectorName = sectorName, amount = amount, date = date)
+        revenueRepository.save(existingRevenue)
 
-        revenueRepository.deleteById(idToDelete)
+        val foundRevenue = revenueRepository.findByDateAndSectorName(date, sectorName)
 
-        verify(revenueRepository).deleteById(eq(idToDelete))
+        assertNotNull(foundRevenue)
+        assertEquals(sectorName, foundRevenue!!.sectorName)
+        assertEquals(amount, foundRevenue.amount, 0.001)
+        assertEquals(date, foundRevenue.date)
+    }
+
+    @Test
+    fun findByDateAndSectorNameShouldReturnNullWhenNotFound() {
+        val date = LocalDate.now().minusDays(2)
+        val sectorName = "Setor Inexistente"
+
+        val foundRevenue = revenueRepository.findByDateAndSectorName(date, sectorName)
+
+        assertNull(foundRevenue)
+    }
+
+    @Test
+    fun updateShouldModifyExistingRevenue() {
+        val date = LocalDate.now()
+        val sectorName = "Setor C"
+        val initialAmount = 100.00
+        val existingRevenue = Revenue(sectorName = sectorName, amount = initialAmount, date = date)
+        val savedRevenue = revenueRepository.save(existingRevenue)
+
+        val updatedAmount = 120.00
+        val revenueToUpdate = savedRevenue.copy(amount = updatedAmount)
+        val updatedRevenue = revenueRepository.update(revenueToUpdate)
+
+        assertNotNull(updatedRevenue)
+        assertEquals(savedRevenue.id, updatedRevenue.id)
+        assertEquals(updatedAmount, updatedRevenue.amount, 0.001)
+    }
+
+    @Test
+    fun deleteShouldRemoveRevenue() {
+        val date = LocalDate.now()
+        val sectorName = "Setor D"
+        val existingRevenue = Revenue(sectorName = sectorName, amount = 75.00, date = date)
+        val savedRevenue = revenueRepository.save(existingRevenue)
+
+        assertNotNull(revenueRepository.findById(savedRevenue.id!!))
+
+        revenueRepository.delete(savedRevenue)
+
+        assertFalse(revenueRepository.findById(savedRevenue.id!!).isPresent)
     }
 
     @Test
     fun findAllShouldReturnAllRevenues() {
-        val revenues = listOf(
-            Revenue(id = 1L, date = LocalDate.now(), sectorName = "A", amount = 10.0),
-            Revenue(id = 2L, date = LocalDate.now(), sectorName = "B", amount = 20.0)
-        )
-        whenever(revenueRepository.findAll()).thenReturn(revenues)
+        val revenue1 = Revenue(sectorName = "S1", amount = 10.0, date = LocalDate.now())
+        val revenue2 = Revenue(sectorName = "S2", amount = 20.0, date = LocalDate.now().minusDays(1))
+        revenueRepository.saveAll(listOf(revenue1, revenue2))
 
-        val result = revenueRepository.findAll()
+        val allRevenues = revenueRepository.findAll().toList()
 
-        assertThat(result).isEqualTo(revenues)
-        verify(revenueRepository).findAll()
+        assertEquals(2, allRevenues.size)
+        assertTrue(allRevenues.any { it.sectorName == "S1" })
+        assertTrue(allRevenues.any { it.sectorName == "S2" })
     }
 }
