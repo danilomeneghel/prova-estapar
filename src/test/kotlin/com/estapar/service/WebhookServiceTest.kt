@@ -60,7 +60,7 @@ class WebhookServiceTest {
         )
 
         val captureInstant = argumentCaptor<Instant>()
-        // Correção: Usar any() no whenever, e capture() apenas no verify
+
         whenever(garageService.registerEntry(any(), any<Instant>())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
@@ -216,7 +216,7 @@ class WebhookServiceTest {
         )
 
         val captureInstant = argumentCaptor<Instant>()
-        // Correção: Usar any() no whenever, e capture() apenas no verify
+
         whenever(garageService.handleExit(any(), any<Instant>())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
@@ -230,7 +230,6 @@ class WebhookServiceTest {
     @Test
     fun processWebhookEventShouldHandleExitEventWhenLicensePlateIsNull() {
         val exitTime = Instant.now()
-        // Correção: Definir o tipo do mapa para Map<String, Any?> para evitar o warning de cast
         val payload: Map<String, Any?> = mapOf(
             "event_type" to "EXIT",
             "license_plate" to null,
@@ -239,8 +238,6 @@ class WebhookServiceTest {
 
         whenever(garageService.handleExit(any(), any())).thenAnswer { }
 
-        // A chamada ao método service espera Map<String, Any>, então o cast ainda é necessário,
-        // mas agora o tipo de 'payload' na declaração está mais correto para o seu conteúdo.
         val result = webhookService.processWebhookEvent(payload as Map<String, Any>)
 
         verify(garageService).handleExit(eq(""), eq(exitTime))
