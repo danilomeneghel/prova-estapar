@@ -9,7 +9,7 @@ O objetivo é criar um sistema de gestão de estacionamentos, que controla o nú
 * Kotlin 1.9.10
 * Java JDK 21
 * Gradle 4.4.1
-* PostgreSql 14
+* PostgreSql 16
 * Docker 28.0.1
 
 ## Tecnologias Utilizadas

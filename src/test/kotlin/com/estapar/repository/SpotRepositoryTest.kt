@@ -17,7 +17,7 @@ class SpotRepositoryTest {
     private lateinit var spotRepository: SpotRepository
 
     @Test
-    fun `findByLatAndLng should return spot when found`() {
+    fun findByLatAndLngShouldReturnSpotWhenFound() {
         val lat = -23.5
         val lng = -46.6
         val mockSector = Sector(id = 1L, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300)
@@ -32,7 +32,7 @@ class SpotRepositoryTest {
     }
 
     @Test
-    fun `findByLatAndLng should return null when not found`() {
+    fun findByLatAndLngShouldReturnNullWhenNotFound() {
         val lat = -99.0
         val lng = -99.0
 
@@ -45,7 +45,7 @@ class SpotRepositoryTest {
     }
 
     @Test
-    fun `findById should return optional of spot when found`() {
+    fun findByIdShouldReturnOptionalOfSpotWhenFound() {
         val id = 1L
         val mockSector = Sector(id = 1L, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300)
         val expectedSpot = Spot(id = id, sector = mockSector, lat = 1.0, lng = 2.0, ocupied = true)
@@ -59,10 +59,10 @@ class SpotRepositoryTest {
     }
 
     @Test
-    fun `save should persist a new spot`() {
+    fun saveShouldPersistANewSpot() {
         val mockSector = Sector(id = 1L, name = "B", basePrice = 20.0, maxCapacity = 50, openHour = "09", closeHour = "18", durationLimitMinutes = 240)
         val newSpot = Spot(sector = mockSector, lat = 3.0, lng = 4.0, ocupied = false)
-        
+
         whenever(spotRepository.save(argThat { spot -> spot.lat == newSpot.lat && spot.lng == newSpot.lng && spot.ocupied == newSpot.ocupied && spot.sector == newSpot.sector }))
             .doAnswer { invocation ->
                 val spotArg = invocation.getArgument<Spot>(0)
@@ -80,7 +80,7 @@ class SpotRepositoryTest {
     }
 
     @Test
-    fun `deleteById should remove spot by id`() {
+    fun deleteByIdShouldRemoveSpotById() {
         val idToDelete = 1L
 
         spotRepository.deleteById(idToDelete)
@@ -89,7 +89,7 @@ class SpotRepositoryTest {
     }
 
     @Test
-    fun `findAll should return all spots`() {
+    fun findAllShouldReturnAllSpots() {
         val mockSector1 = Sector(id = 10L, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300)
         val mockSector2 = Sector(id = 20L, name = "B", basePrice = 20.0, maxCapacity = 50, openHour = "09", closeHour = "18", durationLimitMinutes = 240)
         val spots = listOf(

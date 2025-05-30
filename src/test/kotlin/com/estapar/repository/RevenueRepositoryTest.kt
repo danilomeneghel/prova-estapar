@@ -17,7 +17,7 @@ class RevenueRepositoryTest {
     private lateinit var revenueRepository: RevenueRepository
 
     @Test
-    fun `findByDateAndSectorName should return revenue when found`() {
+    fun findByDateAndSectorNameShouldReturnRevenueWhenFound() {
         val date = LocalDate.of(2024, 5, 29)
         val sectorName = "TestSector"
         val expectedRevenue = Revenue(id = 1L, date = date, sectorName = sectorName, amount = 150.0)
@@ -31,7 +31,7 @@ class RevenueRepositoryTest {
     }
 
     @Test
-    fun `findByDateAndSectorName should return null when not found`() {
+    fun findByDateAndSectorNameShouldReturnNullWhenNotFound() {
         val date = LocalDate.of(2024, 5, 30)
         val sectorName = "NonExistentSector"
 
@@ -44,7 +44,7 @@ class RevenueRepositoryTest {
     }
 
     @Test
-    fun `findById should return optional of revenue when found`() {
+    fun findByIdShouldReturnOptionalOfRevenueWhenFound() {
         val id = 1L
         val expectedRevenue = Revenue(id = id, date = LocalDate.now(), sectorName = "A", amount = 100.0)
 
@@ -57,9 +57,9 @@ class RevenueRepositoryTest {
     }
 
     @Test
-    fun `save should persist a new revenue`() {
+    fun saveShouldPersistANewRevenue() {
         val newRevenue = Revenue(date = LocalDate.now(), sectorName = "New", amount = 50.0)
-        
+
         whenever(revenueRepository.save(argThat { entity -> entity.date == newRevenue.date && entity.sectorName == newRevenue.sectorName && entity.amount == newRevenue.amount }))
             .doAnswer { invocation ->
                 val revenueArg = invocation.getArgument<Revenue>(0)
@@ -78,7 +78,7 @@ class RevenueRepositoryTest {
     }
 
     @Test
-    fun `deleteById should remove revenue by id`() {
+    fun deleteByIdShouldRemoveRevenueById() {
         val idToDelete = 1L
 
         revenueRepository.deleteById(idToDelete)
@@ -87,7 +87,7 @@ class RevenueRepositoryTest {
     }
 
     @Test
-    fun `findAll should return all revenues`() {
+    fun findAllShouldReturnAllRevenues() {
         val revenues = listOf(
             Revenue(id = 1L, date = LocalDate.now(), sectorName = "A", amount = 10.0),
             Revenue(id = 2L, date = LocalDate.now(), sectorName = "B", amount = 20.0)

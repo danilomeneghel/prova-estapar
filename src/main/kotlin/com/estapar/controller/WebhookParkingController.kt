@@ -3,11 +3,10 @@ package com.estapar.controller
 import com.estapar.service.WebhookService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
-import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.format.DateTimeParseException
 
 @Controller("/webhook")
-class WebhookGarageController(
+class WebhookParkingController(
     private val webhookService: WebhookService
 ) {
 

@@ -16,7 +16,7 @@ class SectorRepositoryTest {
     private lateinit var sectorRepository: SectorRepository
 
     @Test
-    fun `findById should return optional of sector when found`() {
+    fun findByIdShouldReturnOptionalOfSectorWhenFound() {
         val id = 1L
         val expectedSector = Sector(id = id, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300)
 
@@ -29,9 +29,9 @@ class SectorRepositoryTest {
     }
 
     @Test
-    fun `save should persist a new sector`() {
+    fun saveShouldPersistANewSector() {
         val newSector = Sector(name = "New", basePrice = 15.0, maxCapacity = 50, openHour = "09", closeHour = "18", durationLimitMinutes = 240)
-        
+
         whenever(sectorRepository.save(argThat { sector -> sector.name == newSector.name && sector.basePrice == newSector.basePrice }))
             .doAnswer { invocation ->
                 val sectorArg = invocation.getArgument<Sector>(0)
@@ -49,7 +49,7 @@ class SectorRepositoryTest {
     }
 
     @Test
-    fun `deleteById should remove sector by id`() {
+    fun deleteByIdShouldRemoveSectorById() {
         val idToDelete = 1L
 
         sectorRepository.deleteById(idToDelete)
@@ -58,7 +58,7 @@ class SectorRepositoryTest {
     }
 
     @Test
-    fun `findAll should return all sectors`() {
+    fun findAllShouldReturnAllSectors() {
         val sectors = listOf(
             Sector(id = 1L, name = "A", basePrice = 10.0, maxCapacity = 100, openHour = "08", closeHour = "20", durationLimitMinutes = 300),
             Sector(id = 2L, name = "B", basePrice = 20.0, maxCapacity = 200, openHour = "07", closeHour = "22", durationLimitMinutes = 400)

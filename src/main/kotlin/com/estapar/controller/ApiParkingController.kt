@@ -9,7 +9,7 @@ import com.estapar.dto.RevenueDTO
 import com.estapar.dto.GarageInfoDTO
 
 @Controller("/api")
-class ApiGarageController(
+class ApiParkingController(
     private val garageService: GarageService
 ) {
     @Post("/plate-status")

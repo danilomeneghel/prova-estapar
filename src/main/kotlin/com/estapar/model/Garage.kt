@@ -4,7 +4,7 @@ import jakarta.persistence.*
 import java.time.Instant
 
 @Entity
-data class VehicleEntry(
+data class Garage(
     @Id
     var licensePlate: String,
     val entryTime: Instant,

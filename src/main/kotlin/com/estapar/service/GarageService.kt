@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory
 open class GarageService(
     private val sectorRepo: SectorRepository,
     private val spotRepo: SpotRepository,
-    private val entryRepo: VehicleEntryRepository,
+    private val garageRepo: GarageRepository,
     private val revenueRepo: RevenueRepository,
     private val objectMapper: ObjectMapper
 ) {
@@ -28,12 +28,12 @@ open class GarageService(
 
     @Transactional
     open fun registerEntry(plate: String, entryTime: Instant) {
-        if (entryRepo.existsById(plate)) {
+        if (garageRepo.existsById(plate)) {
             LOG.warn("ENTRY Event: Vehicle entry for plate {} already exists. Skipping registration.", plate)
             return
         }
-        val newEntry = VehicleEntry(plate, entryTime)
-        entryRepo.save(newEntry)
+        val newEntry = Garage(plate, entryTime)
+        garageRepo.save(newEntry)
         LOG.info("ENTRY Event: Registered new vehicle entry for plate {}. EntryTime: {}", plate, entryTime)
     }
 
@@ -41,12 +41,12 @@ open class GarageService(
     open fun assignSpot(plate: String, lat: Double, lng: Double) {
         LOG.info("PARKED Event: Attempting to assign spot for plate: {}, lat: {}, lng: {}", plate, lat, lng)
 
-        val entry = entryRepo.findById(plate).orElse(null)
+        val entry = garageRepo.findById(plate).orElse(null)
         if (entry == null) {
             LOG.warn("PARKED Event: Vehicle entry not found for plate: {}. Cannot assign spot. This implies ENTRY event was not processed correctly or did not exist.", plate)
             return
         }
-        LOG.debug("PARKED Event: Found VehicleEntry for plate: {}", plate)
+        LOG.debug("PARKED Event: Found Garage for plate: {}", plate)
 
         val spot = spotRepo.findByLatAndLng(lat, lng)
 
@@ -74,7 +74,7 @@ open class GarageService(
         entry.parkedTime = Instant.now()
         entry.spot = savedSpot
         entry.status = "PARKED"
-        val savedEntry = entryRepo.save(entry)
+        val savedEntry = garageRepo.save(entry)
         LOG.info("PARKED Event: Vehicle entry for plate {} updated. ParkedTime: {}, Spot ID: {}. Status: {}", plate, savedEntry.parkedTime, savedEntry.spot?.id, savedEntry.status)
 
         sector.currentOcupied++
@@ -93,12 +93,12 @@ open class GarageService(
             return
         }
 
-        val entry = entryRepo.findById(plate).orElse(null)
+        val entry = garageRepo.findById(plate).orElse(null)
         if (entry == null) {
             LOG.warn("EXIT Event: Vehicle entry not found for plate: {}. Cannot process exit.", plate)
             return
         }
-        LOG.debug("EXIT Event: Found VehicleEntry for plate: {}", plate)
+        LOG.debug("EXIT Event: Found Garage for plate: {}", plate)
 
         var totalRevenueAmount = 0.0
         val spot = entry.spot
@@ -152,14 +152,14 @@ open class GarageService(
         }
 
         entry.exitTime = exitTime
-        entry.status = "EXITED"
+        entry.status = "EXIT"
         entry.spot = null
-        entryRepo.save(entry)
+        garageRepo.save(entry)
         LOG.info("EXIT Event: Vehicle entry for plate {} updated to exited status.", plate)
     }
 
     fun postPlateStatus(licensePlate: String): PlateStatusDTO {
-        val entry = entryRepo.findById(licensePlate).orElse(null)
+        val entry = garageRepo.findById(licensePlate).orElse(null)
         val now = Instant.now()
         val duration = if (entry != null) ((now.toEpochMilli() - (entry.parkedTime ?: entry.entryTime).toEpochMilli()) / 60000).toInt() else 0
         val basePrice = entry?.spot?.sector?.basePrice ?: 0.0
@@ -178,7 +178,7 @@ open class GarageService(
 
     fun postSpotStatus(lat: Double, lng: Double): SpotStatusDTO {
         val spot = spotRepo.findByLatAndLng(lat, lng)
-        val entry = spot?.let { s -> entryRepo.findBySpotAndStatus(s, "PARKED").orElse(null) }
+        val entry = spot?.let { s -> garageRepo.findBySpotAndStatus(s, "PARKED").orElse(null) }
         val now = Instant.now()
         val duration = if (entry != null) ((now.toEpochMilli() - (entry.parkedTime ?: entry.entryTime).toEpochMilli()) / 60000).toInt() else 0
         val basePrice = spot?.sector?.basePrice ?: 0.0
