@@ -7,7 +7,8 @@ import io.swagger.v3.oas.annotations.info.*
 @OpenAPIDefinition(
     info = Info(
             title = "API Estapar",
-            version = "1.0"
+            version = "1.0",
+            description = "API de Gestao de Estacionamentos"
     )
 )
 object Api {

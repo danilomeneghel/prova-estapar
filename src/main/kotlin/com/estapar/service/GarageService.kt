@@ -1,20 +1,24 @@
 package com.estapar.service
 
-import com.estapar.model.*
-import com.estapar.repository.*
+import com.estapar.dto.GarageInfoDTO
+import com.estapar.dto.PlateStatusDTO
+import com.estapar.dto.RevenueDTO
+import com.estapar.dto.SpotStatusDTO
+import com.estapar.dto.SectorInfo
+import com.estapar.dto.SpotInfo
+import com.estapar.model.Garage
+import com.estapar.model.Revenue
+import com.estapar.repository.GarageRepository
+import com.estapar.repository.RevenueRepository
+import com.estapar.repository.SectorRepository
+import com.estapar.repository.SpotRepository
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.micronaut.transaction.annotation.Transactional
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.estapar.dto.PlateStatusDTO
-import com.estapar.dto.SpotStatusDTO
-import com.estapar.dto.RevenueDTO
-import com.estapar.dto.GarageInfoDTO
-import com.estapar.dto.SectorInfo
-import com.estapar.dto.SpotInfo
-import io.micronaut.transaction.annotation.Transactional
-import org.slf4j.LoggerFactory
 
 @Singleton
 open class GarageService(
@@ -80,7 +84,7 @@ open class GarageService(
         sector.currentOcupied++
         val savedSector = sectorRepo.save(sector)
         LOG.info("PARKED Event: Sector {} current occupied count incremented to {}.", savedSector.name, savedSector.currentOcupied)
-        
+
         LOG.info("PARKED Event: Successfully processed for plate {}.", plate)
     }
 
@@ -100,7 +104,7 @@ open class GarageService(
         }
         LOG.debug("EXIT Event: Found Garage for plate: {}", plate)
 
-        var totalRevenueAmount = 0.0
+        var totalRevenueAmount: Double
         val spot = entry.spot
 
         if (spot == null) {
@@ -207,29 +211,25 @@ open class GarageService(
 
     fun getGarage(): GarageInfoDTO {
         val sectors = sectorRepo.findAll().map {
-            mapOf(
-                "sector" to it.name,
-                "basePrice" to it.basePrice,
-                "max_capacity" to it.maxCapacity,
-                "open_hour" to it.openHour.toString(),
-                "close_hour" to it.closeHour.toString(),
-                "duration_limit_minutes" to it.durationLimitMinutes
+            SectorInfo(
+                sector = it.name,
+                basePrice = it.basePrice,
+                max_capacity = it.maxCapacity,
+                open_hour = it.openHour.toString(),
+                close_hour = it.closeHour.toString(),
+                duration_limit_minutes = it.durationLimitMinutes
             )
         }
 
         val spots = spotRepo.findAll().map {
-            mapOf(
-                "id" to it.id,
-                "sector" to it.sector.name,
-                "lat" to it.lat,
-                "lng" to it.lng
+            SpotInfo(
+                id = it.id,
+                sector = it.sector.name,
+                lat = it.lat,
+                lng = it.lng
             )
         }
 
-        val garageMap = mapOf(
-            "garage" to sectors,
-            "spots" to spots
-        )
-        return objectMapper.convertValue(garageMap, GarageInfoDTO::class.java)
+        return GarageInfoDTO(garage = sectors, spots = spots)
     }
 }

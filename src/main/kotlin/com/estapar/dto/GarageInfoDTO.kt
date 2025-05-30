@@ -14,7 +14,7 @@ data class SectorInfo(
 
 @Serdeable
 data class SpotInfo(
-    val id: Long,
+    val id: Long?,
     val sector: String,
     val lat: Double,
     val lng: Double

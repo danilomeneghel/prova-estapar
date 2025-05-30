@@ -6,7 +6,7 @@ import java.time.Instant
 @Entity
 data class Garage(
     @Id
-    var licensePlate: String,
+    val licensePlate: String,
     val entryTime: Instant,
     var parkedTime: Instant? = null,
     @ManyToOne(fetch = FetchType.EAGER)
