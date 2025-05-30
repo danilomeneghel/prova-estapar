@@ -165,48 +165,46 @@ open class GarageService(
     fun postPlateStatus(licensePlate: String): PlateStatusDTO {
         val entry = garageRepo.findById(licensePlate).orElse(null)
         val now = Instant.now()
-        val duration = if (entry != null) ((now.toEpochMilli() - (entry.parkedTime ?: entry.entryTime).toEpochMilli()) / 60000).toInt() else 0
+        val duration = if (entry != null) ((now.toEpochMilli() - (entry.parkedTime ?: entry.entryTime).toEpochMilli()) / 60000.0) else 0.0
         val basePrice = entry?.spot?.sector?.basePrice ?: 0.0
         val price = basePrice * (duration / 60.0)
 
-        val map = mapOf(
-            "licensePlate" to entry?.licensePlate,
-            "priceUntilNow" to String.format("%.2f", price).toDouble(),
-            "entryTime" to entry?.entryTime,
-            "timeParked" to entry?.parkedTime,
-            "lat" to entry?.spot?.lat,
-            "lng" to entry?.spot?.lng
+        return PlateStatusDTO(
+            licensePlate = entry?.licensePlate,
+            priceUntilNow = String.format("%.2f", price).toDouble(),
+            entryTime = entry?.entryTime,
+            timeParked = entry?.parkedTime,
+            lat = entry?.spot?.lat,
+            lng = entry?.spot?.lng
         )
-        return objectMapper.convertValue(map, PlateStatusDTO::class.java)
     }
 
     fun postSpotStatus(lat: Double, lng: Double): SpotStatusDTO {
         val spot = spotRepo.findByLatAndLng(lat, lng)
         val entry = spot?.let { s -> garageRepo.findBySpotAndStatus(s, "PARKED").orElse(null) }
         val now = Instant.now()
-        val duration = if (entry != null) ((now.toEpochMilli() - (entry.parkedTime ?: entry.entryTime).toEpochMilli()) / 60000).toInt() else 0
+
+        val duration = if (entry != null) ((now.toEpochMilli() - (entry.parkedTime ?: entry.entryTime).toEpochMilli()) / 60000.0) else 0.0
         val basePrice = spot?.sector?.basePrice ?: 0.0
         val price = basePrice * (duration / 60.0)
 
-        val map = mapOf(
-            "ocupied" to (spot?.ocupied ?: false),
-            "licensePlate" to entry?.licensePlate,
-            "priceUntilNow" to String.format("%.2f", price).toDouble(),
-            "entryTime" to entry?.entryTime,
-            "timeParked" to entry?.parkedTime
+        return SpotStatusDTO(
+            ocupied = spot?.ocupied ?: false,
+            licensePlate = entry?.licensePlate,
+            priceUntilNow = String.format("%.2f", price).toDouble(),
+            entryTime = entry?.entryTime,
+            timeParked = entry?.parkedTime
         )
-        return objectMapper.convertValue(map, SpotStatusDTO::class.java)
     }
 
     fun getRevenue(date: LocalDate, sector: String): RevenueDTO {
         val revenue = revenueRepo.findByDateAndSectorName(date, sector)
 
-        val map = mapOf(
-            "amount" to (revenue?.amount ?: 0.0),
-            "currency" to "BRL",
-            "timestamp" to date.atStartOfDay(ZoneId.systemDefault()).toString()
+        return RevenueDTO(
+            amount = revenue?.amount ?: 0.0,
+            currency = "BRL",
+            timestamp = date.atStartOfDay(ZoneId.systemDefault()).toString()
         )
-        return objectMapper.convertValue(map, RevenueDTO::class.java)
     }
 
     fun getGarage(): GarageInfoDTO {
@@ -214,10 +212,10 @@ open class GarageService(
             SectorInfo(
                 sector = it.name,
                 basePrice = it.basePrice,
-                max_capacity = it.maxCapacity,
-                open_hour = it.openHour.toString(),
-                close_hour = it.closeHour.toString(),
-                duration_limit_minutes = it.durationLimitMinutes
+                maxCapacity = it.maxCapacity,
+                openHour = it.openHour.toString(),
+                closeHour = it.closeHour.toString(),
+                durationLimitMinutes = it.durationLimitMinutes
             )
         }
 

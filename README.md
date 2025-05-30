@@ -194,6 +194,8 @@ Sua app deve aceitar conexões pelo url http://localhost:3003/webhook
 
 ## REST API
 
+A url base da API é http://localhost:3003/api
+
 ### Consulta de Placa
 
 **POST**
