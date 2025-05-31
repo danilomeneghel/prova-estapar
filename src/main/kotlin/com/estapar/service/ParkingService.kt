@@ -1,18 +1,12 @@
 package com.estapar.service
 
-import com.estapar.dto.GarageInfoDTO
-import com.estapar.dto.PlateStatusDTO
-import com.estapar.dto.RevenueDTO
-import com.estapar.dto.SpotStatusDTO
-import com.estapar.dto.SectorInfo
-import com.estapar.dto.SpotInfo
+import com.estapar.dto.*
 import com.estapar.model.Garage
 import com.estapar.model.Revenue
 import com.estapar.repository.GarageRepository
 import com.estapar.repository.RevenueRepository
 import com.estapar.repository.SectorRepository
 import com.estapar.repository.SpotRepository
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.transaction.annotation.Transactional
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -21,14 +15,13 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 @Singleton
-open class GarageService(
+open class ParkingService(
     private val sectorRepo: SectorRepository,
     private val spotRepo: SpotRepository,
     private val garageRepo: GarageRepository,
     private val revenueRepo: RevenueRepository,
-    private val objectMapper: ObjectMapper
 ) {
-    private val LOG = LoggerFactory.getLogger(GarageService::class.java)
+    private val LOG = LoggerFactory.getLogger(ParkingService::class.java)
 
     @Transactional
     open fun registerEntry(plate: String, entryTime: Instant) {

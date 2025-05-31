@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Assertions.*
 class WebhookServiceTest {
 
     @Mock
-    private lateinit var garageService: GarageService
+    private lateinit var parkingService: ParkingService
 
     @Mock
     private lateinit var objectMapper: ObjectMapper
@@ -30,7 +30,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -43,11 +43,11 @@ class WebhookServiceTest {
             "entry_time" to entryTime.toString()
         )
 
-        whenever(garageService.registerEntry(any(), any())).thenAnswer { }
+        whenever(parkingService.registerEntry(any(), any())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
 
-        verify(garageService).registerEntry(eq(licensePlate), eq(entryTime))
+        verify(parkingService).registerEntry(eq(licensePlate), eq(entryTime))
         assertEquals(payload, result)
     }
 
@@ -61,11 +61,11 @@ class WebhookServiceTest {
 
         val captureInstant = argumentCaptor<Instant>()
 
-        whenever(garageService.registerEntry(any(), any<Instant>())).thenAnswer { }
+        whenever(parkingService.registerEntry(any(), any<Instant>())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
 
-        verify(garageService).registerEntry(eq(licensePlate), captureInstant.capture())
+        verify(parkingService).registerEntry(eq(licensePlate), captureInstant.capture())
         assertTrue(captureInstant.firstValue.isBefore(Instant.now().plusSeconds(1)))
         assertTrue(captureInstant.firstValue.isAfter(Instant.now().minusSeconds(1)))
         assertEquals(payload, result)
@@ -81,7 +81,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -95,7 +95,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -109,7 +109,7 @@ class WebhookServiceTest {
         assertThrows(DateTimeParseException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -124,11 +124,11 @@ class WebhookServiceTest {
             "lng" to lng
         )
 
-        whenever(garageService.assignSpot(any(), any(), any())).thenAnswer { }
+        whenever(parkingService.assignSpot(any(), any(), any())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
 
-        verify(garageService).assignSpot(eq(licensePlate), eq(lat), eq(lng))
+        verify(parkingService).assignSpot(eq(licensePlate), eq(lat), eq(lng))
         assertEquals(payload, result)
     }
 
@@ -143,7 +143,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -158,7 +158,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -172,7 +172,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -186,7 +186,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -199,11 +199,11 @@ class WebhookServiceTest {
             "exit_time" to exitTime.toString()
         )
 
-        whenever(garageService.handleExit(any(), any())).thenAnswer { }
+        whenever(parkingService.handleExit(any(), any())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
 
-        verify(garageService).handleExit(eq(licensePlate), eq(exitTime))
+        verify(parkingService).handleExit(eq(licensePlate), eq(exitTime))
         assertEquals(payload, result)
     }
 
@@ -217,11 +217,11 @@ class WebhookServiceTest {
 
         val captureInstant = argumentCaptor<Instant>()
 
-        whenever(garageService.handleExit(any(), any<Instant>())).thenAnswer { }
+        whenever(parkingService.handleExit(any(), any<Instant>())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
 
-        verify(garageService).handleExit(eq(licensePlate), captureInstant.capture())
+        verify(parkingService).handleExit(eq(licensePlate), captureInstant.capture())
         assertTrue(captureInstant.firstValue.isBefore(Instant.now().plusSeconds(1)))
         assertTrue(captureInstant.firstValue.isAfter(Instant.now().minusSeconds(1)))
         assertEquals(payload, result)
@@ -236,11 +236,11 @@ class WebhookServiceTest {
             "exit_time" to exitTime.toString()
         )
 
-        whenever(garageService.handleExit(any(), any())).thenAnswer { }
+        whenever(parkingService.handleExit(any(), any())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload as Map<String, Any>)
 
-        verify(garageService).handleExit(eq(""), eq(exitTime))
+        verify(parkingService).handleExit(eq(""), eq(exitTime))
         assertEquals(payload, result)
     }
 
@@ -253,11 +253,11 @@ class WebhookServiceTest {
             "exit_time" to exitTime.toString()
         )
 
-        whenever(garageService.handleExit(any(), any())).thenAnswer { }
+        whenever(parkingService.handleExit(any(), any())).thenAnswer { }
 
         val result = webhookService.processWebhookEvent(payload)
 
-        verify(garageService).handleExit(eq(""), eq(exitTime))
+        verify(parkingService).handleExit(eq(""), eq(exitTime))
         assertEquals(payload, result)
     }
 
@@ -273,7 +273,7 @@ class WebhookServiceTest {
         assertThrows(DateTimeParseException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -286,7 +286,7 @@ class WebhookServiceTest {
         assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-        verifyNoInteractions(garageService)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
@@ -300,13 +300,13 @@ class WebhookServiceTest {
         )
 
         val errorMessage = "Database connection lost"
-        whenever(garageService.registerEntry(any(), any())).thenThrow(RuntimeException(errorMessage))
+        whenever(parkingService.registerEntry(any(), any())).thenThrow(RuntimeException(errorMessage))
 
         val exception = assertThrows(RuntimeException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
 
         assertTrue(exception.message?.contains("Failed to process event 'ENTRY' for plate 'ABC1234': $errorMessage") ?: false)
-        verify(garageService).registerEntry(eq(licensePlate), eq(entryTime))
+        verify(parkingService).registerEntry(eq(licensePlate), eq(entryTime))
     }
 }

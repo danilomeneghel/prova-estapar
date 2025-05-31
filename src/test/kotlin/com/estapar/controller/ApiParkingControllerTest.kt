@@ -1,7 +1,7 @@
 package com.estapar.controller
 
 import com.estapar.dto.*
-import com.estapar.service.GarageService
+import com.estapar.service.ParkingService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Assertions.*
 class ApiParkingControllerTest {
 
     @Mock
-    private lateinit var garageService: GarageService
+    private lateinit var parkingService: ParkingService
 
     @InjectMocks
     private lateinit var apiParkingController: ApiParkingController
@@ -34,12 +34,12 @@ class ApiParkingControllerTest {
             lng = -46.655981
         )
 
-        whenever(garageService.postPlateStatus(licensePlate)).thenReturn(expectedResponse)
+        whenever(parkingService.postPlateStatus(licensePlate)).thenReturn(expectedResponse)
 
         val result = apiParkingController.plateStatus(requestBody)
 
         assertEquals(expectedResponse, result)
-        verify(garageService).postPlateStatus(licensePlate)
+        verify(parkingService).postPlateStatus(licensePlate)
     }
 
     @Test
@@ -55,12 +55,12 @@ class ApiParkingControllerTest {
             timeParked = Instant.parse("2025-01-01T10:30:00Z")
         )
 
-        whenever(garageService.postSpotStatus(lat, lng)).thenReturn(expectedResponse)
+        whenever(parkingService.postSpotStatus(lat, lng)).thenReturn(expectedResponse)
 
         val result = apiParkingController.spotStatus(requestBody)
 
         assertEquals(expectedResponse, result)
-        verify(garageService).postSpotStatus(lat, lng)
+        verify(parkingService).postSpotStatus(lat, lng)
     }
 
     @Test
@@ -74,12 +74,12 @@ class ApiParkingControllerTest {
             timestamp = "2025-05-29T00:00:00Z"
         )
 
-        whenever(garageService.getRevenue(date, sector)).thenReturn(expectedResponse)
+        whenever(parkingService.getRevenue(date, sector)).thenReturn(expectedResponse)
 
         val result = apiParkingController.revenue(requestBody)
 
         assertEquals(expectedResponse, result)
-        verify(garageService).getRevenue(date, sector)
+        verify(parkingService).getRevenue(date, sector)
     }
 
     @Test
@@ -105,11 +105,11 @@ class ApiParkingControllerTest {
             )
         )
 
-        whenever(garageService.getGarage()).thenReturn(expectedResponse)
+        whenever(parkingService.getGarage()).thenReturn(expectedResponse)
 
         val result = apiParkingController.garageStatus()
 
         assertEquals(expectedResponse, result)
-        verify(garageService).getGarage()
+        verify(parkingService).getGarage()
     }
 }

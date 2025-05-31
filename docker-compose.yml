@@ -26,7 +26,7 @@ services:
     image: cfontes0estapar/garage-sim:1.0.0
     container_name: garage_simulator_estapar
     ports:
-      - "8080:3000"
+      - "3000:3000"
     restart: unless-stopped
     networks:
       - app-network

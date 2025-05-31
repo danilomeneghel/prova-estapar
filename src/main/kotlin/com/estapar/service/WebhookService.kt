@@ -7,7 +7,7 @@ import java.time.format.DateTimeParseException
 
 @Singleton
 open class WebhookService(
-    private val garageService: GarageService,
+    private val parkingService: ParkingService,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -27,7 +27,7 @@ open class WebhookService(
                     }
                     val entryTimeStr = payload["entry_time"] as? String
                     val entryTime = entryTimeStr?.let { Instant.parse(it) } ?: Instant.now()
-                    garageService.registerEntry(licensePlate, entryTime)
+                    parkingService.registerEntry(licensePlate, entryTime)
                 }
                 "PARKED" -> {
                     if (licensePlate.isNullOrBlank()) {
@@ -38,12 +38,12 @@ open class WebhookService(
                     if (lat == null || lng == null) {
                         throw IllegalArgumentException("Missing lat or lng for PARKED event.")
                     }
-                    garageService.assignSpot(licensePlate, lat, lng)
+                    parkingService.assignSpot(licensePlate, lat, lng)
                 }
                 "EXIT" -> {
                     val exitTimeStr = payload["exit_time"] as? String
                     val exitTime = exitTimeStr?.let { Instant.parse(it) } ?: Instant.now()
-                    garageService.handleExit(licensePlate.orEmpty(), exitTime)
+                    parkingService.handleExit(licensePlate.orEmpty(), exitTime)
                 }
                 else -> throw IllegalArgumentException("Unknown event_type: $eventType.")
             }

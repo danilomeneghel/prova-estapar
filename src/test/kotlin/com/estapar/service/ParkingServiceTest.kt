@@ -1,6 +1,5 @@
 package com.estapar.service
 
-import com.estapar.dto.*
 import com.estapar.model.Garage
 import com.estapar.model.Revenue
 import com.estapar.model.Sector
@@ -23,7 +22,7 @@ import org.junit.jupiter.api.Assertions.*
 import com.fasterxml.jackson.databind.ObjectMapper
 
 @ExtendWith(MockitoExtension::class)
-class GarageServiceTest {
+class ParkingServiceTest {
 
     @Mock
     private lateinit var sectorRepo: SectorRepository
@@ -41,7 +40,7 @@ class GarageServiceTest {
     private lateinit var objectMapper: ObjectMapper
 
     @InjectMocks
-    private lateinit var garageService: GarageService
+    private lateinit var parkingService: ParkingService
 
     @Test
     fun registerEntryShouldSaveNewEntryWhenNotExists() {
@@ -52,7 +51,7 @@ class GarageServiceTest {
         whenever(garageRepo.existsById(licensePlate)).thenReturn(false)
         whenever(garageRepo.save(any<Garage>())).thenReturn(newEntry)
 
-        garageService.registerEntry(licensePlate, entryTime)
+        parkingService.registerEntry(licensePlate, entryTime)
 
         verify(garageRepo).existsById(licensePlate)
         verify(garageRepo).save(argThat<Garage> { garage -> garage.licensePlate == licensePlate && garage.entryTime == entryTime })
@@ -65,7 +64,7 @@ class GarageServiceTest {
 
         whenever(garageRepo.existsById(licensePlate)).thenReturn(true)
 
-        garageService.registerEntry(licensePlate, entryTime)
+        parkingService.registerEntry(licensePlate, entryTime)
 
         verify(garageRepo).existsById(licensePlate)
         verify(garageRepo, never()).save(any())
@@ -96,7 +95,7 @@ class GarageServiceTest {
         whenever(garageRepo.save(any<Garage>())).thenReturn(existingGarage.copy(spot = spot, status = "PARKED"))
         whenever(sectorRepo.save(any<Sector>())).thenReturn(sector.copy(currentOcupied = 1))
 
-        garageService.assignSpot(licensePlate, lat, lng)
+        parkingService.assignSpot(licensePlate, lat, lng)
 
         assertTrue(spot.ocupied)
         assertEquals("PARKED", existingGarage.status)
@@ -118,7 +117,7 @@ class GarageServiceTest {
 
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.empty())
 
-        garageService.assignSpot(licensePlate, lat, lng)
+        parkingService.assignSpot(licensePlate, lat, lng)
 
         verify(garageRepo).findById(licensePlate)
         verify(spotRepo, never()).findByLatAndLng(any(), any())
@@ -138,7 +137,7 @@ class GarageServiceTest {
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.of(existingGarage))
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(null)
 
-        garageService.assignSpot(licensePlate, lat, lng)
+        parkingService.assignSpot(licensePlate, lat, lng)
 
         verify(garageRepo).findById(licensePlate)
         verify(spotRepo).findByLatAndLng(lat, lng)
@@ -169,7 +168,7 @@ class GarageServiceTest {
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.of(existingGarage))
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(spot)
 
-        garageService.assignSpot(licensePlate, lat, lng)
+        parkingService.assignSpot(licensePlate, lat, lng)
 
         verify(garageRepo).findById(licensePlate)
         verify(spotRepo).findByLatAndLng(lat, lng)
@@ -200,7 +199,7 @@ class GarageServiceTest {
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.of(existingGarage))
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(spot)
 
-        garageService.assignSpot(licensePlate, lat, lng)
+        parkingService.assignSpot(licensePlate, lat, lng)
 
         verify(garageRepo).findById(licensePlate)
         verify(spotRepo).findByLatAndLng(lat, lng)
@@ -236,7 +235,7 @@ class GarageServiceTest {
         whenever(sectorRepo.save(any<Sector>())).thenReturn(sector.copy(currentOcupied = 4))
         whenever(garageRepo.save(any<Garage>())).thenReturn(existingGarage.copy(exitTime = exitTime, status = "EXIT", spot = null))
 
-        garageService.handleExit(licensePlate, exitTime)
+        parkingService.handleExit(licensePlate, exitTime)
 
         verify(garageRepo).findById(licensePlate)
         verify(revenueRepo).findByDateAndSectorName(today, sector.name)
@@ -288,7 +287,7 @@ class GarageServiceTest {
         whenever(sectorRepo.save(any<Sector>())).thenReturn(sector.copy(currentOcupied = sector.currentOcupied - 1))
         whenever(garageRepo.save(any<Garage>())).thenReturn(existingGarage.copy(exitTime = exitTime, status = "EXIT", spot = null))
 
-        garageService.handleExit(licensePlate, exitTime)
+        parkingService.handleExit(licensePlate, exitTime)
 
         verify(revenueRepo).findByDateAndSectorName(today, sector.name)
         verify(revenueRepo).save(argThat<Revenue> { revenue ->
@@ -306,7 +305,7 @@ class GarageServiceTest {
 
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.empty())
 
-        garageService.handleExit(licensePlate, exitTime)
+        parkingService.handleExit(licensePlate, exitTime)
 
         verify(garageRepo).findById(licensePlate)
         verify(revenueRepo, never()).findByDateAndSectorName(any(), any())
@@ -327,7 +326,7 @@ class GarageServiceTest {
 
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.of(garageEntry))
 
-        val result = garageService.postPlateStatus(licensePlate)
+        val result = parkingService.postPlateStatus(licensePlate)
 
         assertEquals(licensePlate, result.licensePlate)
         assertTrue(result.priceUntilNow > 0.0)
@@ -348,7 +347,7 @@ class GarageServiceTest {
 
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.of(garageEntry))
 
-        val result = garageService.postPlateStatus(licensePlate)
+        val result = parkingService.postPlateStatus(licensePlate)
 
         assertEquals(licensePlate, result.licensePlate)
         assertTrue(result.priceUntilNow > 0.0)
@@ -365,7 +364,7 @@ class GarageServiceTest {
 
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.empty())
 
-        val result = garageService.postPlateStatus(licensePlate)
+        val result = parkingService.postPlateStatus(licensePlate)
 
         assertNull(result.licensePlate)
         assertEquals(0.0, result.priceUntilNow)
@@ -390,7 +389,7 @@ class GarageServiceTest {
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(spot)
         whenever(garageRepo.findBySpotAndStatus(spot, "PARKED")).thenReturn(Optional.of(garageEntry))
 
-        val result = garageService.postSpotStatus(lat, lng)
+        val result = parkingService.postSpotStatus(lat, lng)
 
         assertTrue(result.ocupied)
         assertEquals(licensePlate, result.licensePlate)
@@ -411,7 +410,7 @@ class GarageServiceTest {
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(spot)
         whenever(garageRepo.findBySpotAndStatus(spot, "PARKED")).thenReturn(Optional.empty())
 
-        val result = garageService.postSpotStatus(lat, lng)
+        val result = parkingService.postSpotStatus(lat, lng)
 
         assertFalse(result.ocupied)
         assertNull(result.licensePlate)
@@ -429,7 +428,7 @@ class GarageServiceTest {
 
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(null)
 
-        val result = garageService.postSpotStatus(lat, lng)
+        val result = parkingService.postSpotStatus(lat, lng)
 
         assertFalse(result.ocupied)
         assertNull(result.licensePlate)
@@ -449,7 +448,7 @@ class GarageServiceTest {
 
         whenever(revenueRepo.findByDateAndSectorName(date, sectorName)).thenReturn(revenue)
 
-        val result = garageService.getRevenue(date, sectorName)
+        val result = parkingService.getRevenue(date, sectorName)
 
         assertEquals(expectedAmount, result.amount, 0.001)
         assertEquals("BRL", result.currency)
@@ -464,7 +463,7 @@ class GarageServiceTest {
 
         whenever(revenueRepo.findByDateAndSectorName(date, sectorName)).thenReturn(null)
 
-        val result = garageService.getRevenue(date, sectorName)
+        val result = parkingService.getRevenue(date, sectorName)
 
         assertEquals(0.0, result.amount, 0.001)
         assertEquals("BRL", result.currency)
@@ -482,7 +481,7 @@ class GarageServiceTest {
         whenever(sectorRepo.findAll()).thenReturn(listOf(sector1, sector2))
         whenever(spotRepo.findAll()).thenReturn(listOf(spot1, spot2))
 
-        val result = garageService.getGarage()
+        val result = parkingService.getGarage()
 
         assertEquals(2, result.garage.size)
         assertEquals(2, result.spots.size)

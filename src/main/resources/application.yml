@@ -36,5 +36,5 @@ jpa:
           auto: update
 
 garage-simulator:
-  api-url: http://localhost:3000
+  url: http://localhost:3000
   timeout: 6000
