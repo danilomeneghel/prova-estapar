@@ -4,6 +4,7 @@ services:
   postgres:
     image: postgres:16
     container_name: postgres_estapar
+    hostname: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -24,12 +25,18 @@ services:
 
   garage-simulator:
     image: cfontes0estapar/garage-sim:1.0.0
-    container_name: garage_simulator_estapar
     ports:
       - "3000:3000"
-    restart: unless-stopped
     networks:
       - app-network
+    environment:
+      - WEBHOOK_URL=http://app_estapar:3003/webhook
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/garage" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   app:
     build:
@@ -38,7 +45,7 @@ services:
     container_name: app_estapar
     environment:
       - MICRONAUT_ENVIRONMENTS=docker
-      - DATASOURCES_DEFAULT_URL=jdbc:postgresql://postgres_estapar:5432/estapar
+      - DATASOURCES_DEFAULT_URL=jdbc:postgresql://postgres:5432/estapar
       - DATASOURCES_DEFAULT_USERNAME=postgres
       - DATASOURCES_DEFAULT_PASSWORD=postgres
     ports:

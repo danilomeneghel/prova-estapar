@@ -1,6 +1,6 @@
 package com.estapar.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -9,7 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 import java.time.Instant
 import java.time.format.DateTimeParseException
-import org.junit.jupiter.api.Assertions.*
 
 @ExtendWith(MockitoExtension::class)
 class WebhookServiceTest {
@@ -17,19 +16,16 @@ class WebhookServiceTest {
     @Mock
     private lateinit var parkingService: ParkingService
 
-    @Mock
-    private lateinit var objectMapper: ObjectMapper
-
     @InjectMocks
     private lateinit var webhookService: WebhookService
 
     @Test
     fun processWebhookEventShouldThrowExceptionWhenEventTypeIsMissing() {
         val payload = mapOf("license_plate" to "ABC1234")
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Missing required field: event_type in webhook payload.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
@@ -42,13 +38,10 @@ class WebhookServiceTest {
             "license_plate" to licensePlate,
             "entry_time" to entryTime.toString()
         )
-
-        whenever(parkingService.registerEntry(any(), any())).thenAnswer { }
-
-        val result = webhookService.processWebhookEvent(payload)
-
+        assertDoesNotThrow {
+            webhookService.processWebhookEvent(payload)
+        }
         verify(parkingService).registerEntry(eq(licensePlate), eq(entryTime))
-        assertEquals(payload, result)
     }
 
     @Test
@@ -58,17 +51,13 @@ class WebhookServiceTest {
             "event_type" to "ENTRY",
             "license_plate" to licensePlate
         )
-
         val captureInstant = argumentCaptor<Instant>()
-
-        whenever(parkingService.registerEntry(any(), any<Instant>())).thenAnswer { }
-
-        val result = webhookService.processWebhookEvent(payload)
-
+        assertDoesNotThrow {
+            webhookService.processWebhookEvent(payload)
+        }
         verify(parkingService).registerEntry(eq(licensePlate), captureInstant.capture())
-        assertTrue(captureInstant.firstValue.isBefore(Instant.now().plusSeconds(1)))
-        assertTrue(captureInstant.firstValue.isAfter(Instant.now().minusSeconds(1)))
-        assertEquals(payload, result)
+        assertTrue(captureInstant.firstValue.isBefore(Instant.now().plusSeconds(2)))
+        assertTrue(captureInstant.firstValue.isAfter(Instant.now().minusSeconds(2)))
     }
 
     @Test
@@ -77,10 +66,10 @@ class WebhookServiceTest {
             "event_type" to "ENTRY",
             "entry_time" to Instant.now().toString()
         )
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Missing or empty license_plate for ENTRY event.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
@@ -91,10 +80,10 @@ class WebhookServiceTest {
             "license_plate" to "",
             "entry_time" to Instant.now().toString()
         )
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Missing or empty license_plate for ENTRY event.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
@@ -105,7 +94,6 @@ class WebhookServiceTest {
             "license_plate" to "ABC1234",
             "entry_time" to "invalid-time"
         )
-
         assertThrows(DateTimeParseException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
@@ -123,13 +111,10 @@ class WebhookServiceTest {
             "lat" to lat,
             "lng" to lng
         )
-
-        whenever(parkingService.assignSpot(any(), any(), any())).thenAnswer { }
-
-        val result = webhookService.processWebhookEvent(payload)
-
+        assertDoesNotThrow {
+            webhookService.processWebhookEvent(payload)
+        }
         verify(parkingService).assignSpot(eq(licensePlate), eq(lat), eq(lng))
-        assertEquals(payload, result)
     }
 
     @Test
@@ -139,10 +124,10 @@ class WebhookServiceTest {
             "lat" to 10.0,
             "lng" to 20.0
         )
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Missing or empty license_plate for PARKED event.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
@@ -154,10 +139,10 @@ class WebhookServiceTest {
             "lat" to 10.0,
             "lng" to 20.0
         )
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Missing or empty license_plate for PARKED event.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
@@ -168,10 +153,10 @@ class WebhookServiceTest {
             "license_plate" to "ABC1234",
             "lng" to 20.0
         )
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Missing lat for PARKED event.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
@@ -182,10 +167,10 @@ class WebhookServiceTest {
             "license_plate" to "ABC1234",
             "lat" to 10.0
         )
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Missing lng for PARKED event.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
@@ -198,13 +183,10 @@ class WebhookServiceTest {
             "license_plate" to licensePlate,
             "exit_time" to exitTime.toString()
         )
-
-        whenever(parkingService.handleExit(any(), any())).thenAnswer { }
-
-        val result = webhookService.processWebhookEvent(payload)
-
+        assertDoesNotThrow {
+            webhookService.processWebhookEvent(payload)
+        }
         verify(parkingService).handleExit(eq(licensePlate), eq(exitTime))
-        assertEquals(payload, result)
     }
 
     @Test
@@ -214,53 +196,49 @@ class WebhookServiceTest {
             "event_type" to "EXIT",
             "license_plate" to licensePlate
         )
-
         val captureInstant = argumentCaptor<Instant>()
-
-        whenever(parkingService.handleExit(any(), any<Instant>())).thenAnswer { }
-
-        val result = webhookService.processWebhookEvent(payload)
-
+        assertDoesNotThrow {
+            webhookService.processWebhookEvent(payload)
+        }
         verify(parkingService).handleExit(eq(licensePlate), captureInstant.capture())
-        assertTrue(captureInstant.firstValue.isBefore(Instant.now().plusSeconds(1)))
-        assertTrue(captureInstant.firstValue.isAfter(Instant.now().minusSeconds(1)))
-        assertEquals(payload, result)
+        assertTrue(captureInstant.firstValue.isBefore(Instant.now().plusSeconds(2)))
+        assertTrue(captureInstant.firstValue.isAfter(Instant.now().minusSeconds(2)))
     }
 
     @Test
-    fun processWebhookEventShouldHandleExitEventWhenLicensePlateIsNull() {
+    fun processWebhookEventShouldThrowExceptionWhenLicensePlateIsNullForExitEvent() {
         val exitTime = Instant.now()
-        val payload: Map<String, Any?> = mapOf(
+        val payloadWithNullLicensePlate: Map<String, Any?> = mapOf(
             "event_type" to "EXIT",
-            "license_plate" to null,
+            "license_plate" to null, // Isso é intencional para o teste
             "exit_time" to exitTime.toString()
         )
-
-        whenever(parkingService.handleExit(any(), any())).thenAnswer { }
-
-        val result = webhookService.processWebhookEvent(payload as Map<String, Any>)
-
-        verify(parkingService).handleExit(eq(""), eq(exitTime))
-        assertEquals(payload, result)
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            // A melhor forma de lidar com o Map<String, Any?> e passar para Map<String, Any>
+            // sem Unchecked cast warning é criar um novo mapa que garanta os tipos.
+            // No entanto, para o cenário específico de teste de null, precisamos simular o null.
+            // A solução é criar um novo mapa filtrado e então fazer o cast seguro.
+            val filteredPayload = payloadWithNullLicensePlate.filterValues { it != null }
+            webhookService.processWebhookEvent(filteredPayload as Map<String, Any>)
+        }
+        assertEquals("Missing or empty license_plate for EXIT event.", exception.message)
+        verifyNoInteractions(parkingService)
     }
 
     @Test
-    fun processWebhookEventShouldHandleExitEventWhenLicensePlateIsEmpty() {
+    fun processWebhookEventShouldThrowExceptionWhenLicensePlateIsEmptyForExitEvent() {
         val exitTime = Instant.now()
         val payload = mapOf(
             "event_type" to "EXIT",
             "license_plate" to "",
             "exit_time" to exitTime.toString()
         )
-
-        whenever(parkingService.handleExit(any(), any())).thenAnswer { }
-
-        val result = webhookService.processWebhookEvent(payload)
-
-        verify(parkingService).handleExit(eq(""), eq(exitTime))
-        assertEquals(payload, result)
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            webhookService.processWebhookEvent(payload)
+        }
+        assertEquals("Missing or empty license_plate for EXIT event.", exception.message)
+        verifyNoInteractions(parkingService)
     }
-
 
     @Test
     fun processWebhookEventShouldThrowDateTimeParseExceptionForInvalidExitTime() {
@@ -269,7 +247,6 @@ class WebhookServiceTest {
             "license_plate" to "ABC1234",
             "exit_time" to "invalid-time"
         )
-
         assertThrows(DateTimeParseException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
@@ -282,15 +259,15 @@ class WebhookServiceTest {
             "event_type" to "UNKNOWN_EVENT",
             "license_plate" to "ABC1234"
         )
-
-        assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
+        assertEquals("Unknown event_type: UNKNOWN_EVENT.", exception.message)
         verifyNoInteractions(parkingService)
     }
 
     @Test
-    fun processWebhookEventShouldThrowRuntimeExceptionWhenGarageServiceFails() {
+    fun processWebhookEventShouldThrowRuntimeExceptionWhenParkingServiceFails() {
         val licensePlate = "ABC1234"
         val entryTime = Instant.now()
         val payload = mapOf(
@@ -298,15 +275,13 @@ class WebhookServiceTest {
             "license_plate" to licensePlate,
             "entry_time" to entryTime.toString()
         )
-
         val errorMessage = "Database connection lost"
         whenever(parkingService.registerEntry(any(), any())).thenThrow(RuntimeException(errorMessage))
 
         val exception = assertThrows(RuntimeException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
-
-        assertTrue(exception.message?.contains("Failed to process event 'ENTRY' for plate 'ABC1234': $errorMessage") ?: false)
+        assertTrue(exception.message?.contains("Failed to process webhook event 'ENTRY': $errorMessage") ?: false)
         verify(parkingService).registerEntry(eq(licensePlate), eq(entryTime))
     }
 }

@@ -21,7 +21,7 @@ netty:
 
 datasources:
   default:
-    url: jdbc:postgresql://postgres_estapar:5432/estapar
+    url: jdbc:postgresql://postgres:5432/estapar
     username: postgres
     password: postgres
     driverClassName: org.postgresql.Driver
@@ -35,6 +35,12 @@ jpa:
         hbm2ddl:
           auto: update
 
-garage-simulator:
-  url: http://localhost:3000
-  timeout: 6000
+garage:
+  simulator:
+    url: http://garage-simulator:3000
+
+logger:
+  levels:
+    io.micronaut.data.repository.jpa.kotlin: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE

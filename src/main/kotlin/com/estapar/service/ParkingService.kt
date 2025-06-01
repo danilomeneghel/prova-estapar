@@ -1,6 +1,11 @@
 package com.estapar.service
 
-import com.estapar.dto.*
+import com.estapar.dto.GarageInfoDTO
+import com.estapar.dto.PlateStatusDTO
+import com.estapar.dto.RevenueDTO
+import com.estapar.dto.SectorInfo
+import com.estapar.dto.SpotInfo
+import com.estapar.dto.SpotStatusDTO
 import com.estapar.model.Garage
 import com.estapar.model.Revenue
 import com.estapar.repository.GarageRepository
@@ -9,10 +14,10 @@ import com.estapar.repository.SectorRepository
 import com.estapar.repository.SpotRepository
 import io.micronaut.transaction.annotation.Transactional
 import jakarta.inject.Singleton
-import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import org.slf4j.LoggerFactory
 
 @Singleton
 open class ParkingService(
@@ -26,82 +31,82 @@ open class ParkingService(
     @Transactional
     open fun registerEntry(plate: String, entryTime: Instant) {
         if (garageRepo.existsById(plate)) {
-            LOG.warn("ENTRY Event: Vehicle entry for plate {} already exists. Skipping registration.", plate)
+            LOG.warn("ParkingService: Vehicle entry for plate {} already exists. Skipping registration.", plate)
             return
         }
         val newEntry = Garage(plate, entryTime)
         garageRepo.save(newEntry)
-        LOG.info("ENTRY Event: Registered new vehicle entry for plate {}. EntryTime: {}", plate, entryTime)
+        LOG.info("ParkingService: Registered new vehicle entry for plate {}. EntryTime: {}", plate, entryTime)
     }
 
     @Transactional
     open fun assignSpot(plate: String, lat: Double, lng: Double) {
-        LOG.info("PARKED Event: Attempting to assign spot for plate: {}, lat: {}, lng: {}", plate, lat, lng)
+        LOG.info("ParkingService: Attempting to assign spot for plate: {}, lat: {}, lng: {}", plate, lat, lng)
 
         val entry = garageRepo.findById(plate).orElse(null)
         if (entry == null) {
-            LOG.warn("PARKED Event: Vehicle entry not found for plate: {}. Cannot assign spot. This implies ENTRY event was not processed correctly or did not exist.", plate)
+            LOG.warn("ParkingService: Vehicle entry not found for plate: {}. Cannot assign spot.", plate)
             return
         }
-        LOG.debug("PARKED Event: Found Garage for plate: {}", plate)
+        LOG.debug("ParkingService: Found Garage for plate: {}", plate)
 
         val spot = spotRepo.findByLatAndLng(lat, lng)
 
         if (spot == null) {
-            LOG.warn("PARKED Event: Spot not found for lat: {}, lng: {}. Cannot assign spot. Check if initial garage data (spots) is loaded.", lat, lng)
+            LOG.warn("ParkingService: Spot not found for lat: {}, lng: {}. Cannot assign spot. Check if initial garage data (spots) is loaded.", lat, lng)
             return
         }
-        LOG.debug("PARKED Event: Found Spot ID: {} (currently occupied: {})", spot.id, spot.ocupied)
+        LOG.debug("ParkingService: Found Spot ID: {} (currently occupied: {})", spot.id, spot.ocupied)
 
         val sector = spot.sector
         if (sector.currentOcupied >= sector.maxCapacity) {
-            LOG.warn("PARKED Event: Sector {} is at max capacity ({}). Cannot assign spot to plate {}.", sector.name, sector.maxCapacity, plate)
+            LOG.warn("ParkingService: Sector {} is at max capacity ({}). Cannot assign spot to plate {}.", sector.name, sector.maxCapacity, plate)
             return
         }
 
         if (spot.ocupied) {
-            LOG.warn("PARKED Event: Spot {} is already occupied. Cannot assign spot to plate {}.", spot.id, plate)
+            LOG.warn("ParkingService: Spot {} is already occupied. Cannot assign spot to plate {}.", spot.id, plate)
             return
         }
 
         spot.ocupied = true
         val savedSpot = spotRepo.save(spot)
-        LOG.info("PARKED Event: Spot {} marked as occupied. Lat: {}, Lng: {}.", savedSpot.id, savedSpot.lat, savedSpot.lng)
+        LOG.info("ParkingService: Spot {} marked as occupied. Lat: {}, Lng: {}.", savedSpot.id, savedSpot.lat, savedSpot.lng)
 
         entry.parkedTime = Instant.now()
         entry.spot = savedSpot
         entry.status = "PARKED"
         val savedEntry = garageRepo.save(entry)
-        LOG.info("PARKED Event: Vehicle entry for plate {} updated. ParkedTime: {}, Spot ID: {}. Status: {}", plate, savedEntry.parkedTime, savedEntry.spot?.id, savedEntry.status)
+        LOG.info("ParkingService: Vehicle entry for plate {} updated. ParkedTime: {}, Spot ID: {}. Status: {}", plate, savedEntry.parkedTime, savedEntry.spot?.id, savedEntry.status)
 
         sector.currentOcupied++
         val savedSector = sectorRepo.save(sector)
-        LOG.info("PARKED Event: Sector {} current occupied count incremented to {}.", savedSector.name, savedSector.currentOcupied)
+        LOG.info("ParkingService: Sector {} current occupied count incremented to {}.", savedSector.name, savedSector.currentOcupied)
 
-        LOG.info("PARKED Event: Successfully processed for plate {}.", plate)
+        LOG.info("ParkingService: Successfully processed for plate {}.", plate)
     }
 
     @Transactional
     open fun handleExit(plate: String, exitTime: Instant) {
-        LOG.info("EXIT Event: Attempting to handle exit for plate: {}. ExitTime: {}", plate, exitTime)
+        LOG.info("ParkingService: Attempting to handle exit for plate: {}. ExitTime: {}", plate, exitTime)
 
         if (plate.isBlank()) {
-            LOG.info("EXIT Event: Received empty plate. Skipping exit processing as no specific vehicle can be identified.")
+            LOG.info("ParkingService: Received empty plate. Skipping exit processing.")
             return
         }
 
         val entry = garageRepo.findById(plate).orElse(null)
         if (entry == null) {
-            LOG.warn("EXIT Event: Vehicle entry not found for plate: {}. Cannot process exit.", plate)
+            LOG.warn("ParkingService: Vehicle entry not found for plate: {}. Cannot process exit.", plate)
             return
         }
-        LOG.debug("EXIT Event: Found Garage for plate: {}", plate)
+        LOG.debug("ParkingService: Found Garage for plate: {}", plate)
 
         var totalRevenueAmount: Double
         val spot = entry.spot
 
         if (spot == null) {
-            LOG.warn("EXIT Event: Spot not associated with vehicle entry for plate: {}. Cannot calculate price or release spot. Still updating entry status.", plate)
+            LOG.warn("ParkingService: Spot not associated with vehicle entry for plate: {}. Cannot calculate price or release spot. Still updating entry status.", plate)
         } else {
             val sector = spot.sector
             val basePrice = sector.basePrice
@@ -111,7 +116,7 @@ open class ParkingService(
             } else {
                 (exitTime.toEpochMilli() - entry.entryTime.toEpochMilli()) / 60000.0
             }
-            LOG.debug("EXIT Event: Parked duration for plate {} is {} minutes.", plate, parkedDurationMinutes)
+            LOG.debug("ParkingService: Parked duration for plate {} is {} minutes.", plate, parkedDurationMinutes)
 
             val pricePerHour = basePrice
             val totalCalculatedPrice = (parkedDurationMinutes / 60.0) * pricePerHour
@@ -124,7 +129,7 @@ open class ParkingService(
                 else -> totalCalculatedPrice * 1.25
             }
             totalRevenueAmount = finalPrice
-            LOG.info("EXIT Event: Calculated final revenue amount for plate {}: {:.2f}", plate, totalRevenueAmount)
+            LOG.info("ParkingService: Calculated final revenue amount for plate {}: {:.2f}", plate, totalRevenueAmount)
 
             val date = LocalDate.ofInstant(exitTime, ZoneId.systemDefault())
             var revenue = revenueRepo.findByDateAndSectorName(date, sector.name)
@@ -132,27 +137,27 @@ open class ParkingService(
             if (revenue == null) {
                 revenue = Revenue(date = date, sectorName = sector.name, amount = totalRevenueAmount)
                 revenueRepo.save(revenue)
-                LOG.info("EXIT Event: Created new revenue entry for date {} and sector {}. Amount: {:.2f}", date, sector.name, totalRevenueAmount)
+                LOG.info("ParkingService: Created new revenue entry for date {} and sector {}. Amount: {:.2f}", date, sector.name, totalRevenueAmount)
             } else {
                 revenue.amount += totalRevenueAmount
                 revenueRepo.save(revenue)
-                LOG.info("EXIT Event: Updated existing revenue for date {} and sector {}. New amount: {:.2f}", date, sector.name, revenue.amount)
+                LOG.info("ParkingService: Updated existing revenue for date {} and sector {}. New amount: {:.2f}", date, sector.name, revenue.amount)
             }
 
             spot.ocupied = false
             spotRepo.save(spot)
-            LOG.info("EXIT Event: Spot {} marked as unoccupied.", spot.id)
+            LOG.info("ParkingService: Spot {} marked as unoccupied.", spot.id)
 
             sector.currentOcupied--
             sectorRepo.save(sector)
-            LOG.info("EXIT Event: Sector {} current occupied count decremented to {}.", sector.name, sector.currentOcupied)
+            LOG.info("ParkingService: Sector {} current occupied count decremented to {}.", sector.name, sector.currentOcupied)
         }
 
         entry.exitTime = exitTime
         entry.status = "EXIT"
         entry.spot = null
         garageRepo.save(entry)
-        LOG.info("EXIT Event: Vehicle entry for plate {} updated to exited status.", plate)
+        LOG.info("ParkingService: Vehicle entry for plate {} updated to exited status.", plate)
     }
 
     fun postPlateStatus(licensePlate: String): PlateStatusDTO {
