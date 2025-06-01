@@ -210,14 +210,10 @@ class WebhookServiceTest {
         val exitTime = Instant.now()
         val payloadWithNullLicensePlate: Map<String, Any?> = mapOf(
             "event_type" to "EXIT",
-            "license_plate" to null, // Isso é intencional para o teste
+            "license_plate" to null,
             "exit_time" to exitTime.toString()
         )
         val exception = assertThrows(IllegalArgumentException::class.java) {
-            // A melhor forma de lidar com o Map<String, Any?> e passar para Map<String, Any>
-            // sem Unchecked cast warning é criar um novo mapa que garanta os tipos.
-            // No entanto, para o cenário específico de teste de null, precisamos simular o null.
-            // A solução é criar um novo mapa filtrado e então fazer o cast seguro.
             val filteredPayload = payloadWithNullLicensePlate.filterValues { it != null }
             webhookService.processWebhookEvent(filteredPayload as Map<String, Any>)
         }

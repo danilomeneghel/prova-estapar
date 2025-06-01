@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 
 @MicronautTest(environments = ["test"])
 class SpotRepositoryTest {
@@ -19,6 +20,7 @@ class SpotRepositoryTest {
     lateinit var sectorRepository: SectorRepository
 
     private lateinit var testSector: Sector
+    private val idCounter = AtomicLong(1L)
 
     @BeforeEach
     fun setup() {
@@ -34,11 +36,13 @@ class SpotRepositoryTest {
             durationLimitMinutes = 180
         )
         testSector = sectorRepository.save(testSector)
+        idCounter.set(1L)
     }
 
     @Test
     fun saveShouldPersistNewSpot() {
         val newSpot = Spot(
+            id = idCounter.getAndIncrement(),
             lat = 1.0,
             lng = 2.0,
             ocupied = false,
@@ -48,6 +52,7 @@ class SpotRepositoryTest {
         val savedSpot = spotRepository.save(newSpot)
 
         assertNotNull(savedSpot.id)
+        assertEquals(newSpot.id, savedSpot.id)
         assertEquals(newSpot.lat, savedSpot.lat, 0.001)
         assertEquals(newSpot.lng, savedSpot.lng, 0.001)
         assertEquals(newSpot.ocupied, savedSpot.ocupied)
@@ -57,6 +62,7 @@ class SpotRepositoryTest {
     @Test
     fun findByIdShouldReturnOptionalOfSpotWhenFound() {
         val existingSpot = Spot(
+            id = idCounter.getAndIncrement(),
             lat = 3.0,
             lng = 4.0,
             ocupied = true,
@@ -64,7 +70,7 @@ class SpotRepositoryTest {
         )
         val savedSpot = spotRepository.save(existingSpot)
 
-        val foundSpotOptional = spotRepository.findById(savedSpot.id!!)
+        val foundSpotOptional = spotRepository.findById(savedSpot.id)
 
         assertTrue(foundSpotOptional.isPresent)
         val foundSpot = foundSpotOptional.get()
@@ -85,6 +91,7 @@ class SpotRepositoryTest {
         val lat = 5.0
         val lng = 6.0
         val existingSpot = Spot(
+            id = idCounter.getAndIncrement(),
             lat = lat,
             lng = lng,
             ocupied = false,
@@ -110,6 +117,7 @@ class SpotRepositoryTest {
     @Test
     fun updateShouldModifyExistingSpot() {
         val initialSpot = Spot(
+            id = idCounter.getAndIncrement(),
             lat = 7.0,
             lng = 8.0,
             ocupied = false,
@@ -129,6 +137,7 @@ class SpotRepositoryTest {
     @Test
     fun deleteShouldRemoveSpot() {
         val spotToDelete = Spot(
+            id = idCounter.getAndIncrement(),
             lat = 9.0,
             lng = 10.0,
             ocupied = false,
@@ -136,17 +145,17 @@ class SpotRepositoryTest {
         )
         val savedSpot = spotRepository.save(spotToDelete)
 
-        assertNotNull(spotRepository.findById(savedSpot.id!!))
+        assertNotNull(spotRepository.findById(savedSpot.id))
 
         spotRepository.delete(savedSpot)
 
-        assertFalse(spotRepository.findById(savedSpot.id!!).isPresent)
+        assertFalse(spotRepository.findById(savedSpot.id).isPresent)
     }
 
     @Test
     fun findAllShouldReturnAllSpots() {
-        val spot1 = Spot(lat = 11.0, lng = 12.0, ocupied = false, sector = testSector)
-        val spot2 = Spot(lat = 13.0, lng = 14.0, ocupied = true, sector = testSector)
+        val spot1 = Spot(id = idCounter.getAndIncrement(), lat = 11.0, lng = 12.0, ocupied = false, sector = testSector)
+        val spot2 = Spot(id = idCounter.getAndIncrement(), lat = 13.0, lng = 14.0, ocupied = true, sector = testSector)
         spotRepository.saveAll(listOf(spot1, spot2))
 
         val allSpots = spotRepository.findAll().toList()

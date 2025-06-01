@@ -2,7 +2,6 @@ package com.estapar.controller
 
 import com.estapar.service.WebhookService
 import io.micronaut.http.HttpStatus
-import io.micronaut.http.HttpResponse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -11,8 +10,8 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.format.DateTimeParseException
 import java.time.Instant
+import java.time.format.DateTimeParseException
 
 @ExtendWith(MockitoExtension::class)
 class WebhookParkingControllerTest {
@@ -68,13 +67,10 @@ class WebhookParkingControllerTest {
     fun receiveShouldReturnServerErrorWhenRuntimeExceptionIsThrown() {
         val payload = mapOf("event_type" to "ENTRY", "license_plate" to "ABC1234", "entry_time" to Instant.now().toString())
         val internalServiceOriginalMessage = "Database connection lost"
-        val eventType = payload["event_type"] as String // "ENTRY"
-        // Esta é a mensagem EXATA que o WebhookService produziria (encapsulando a original)
+        val eventType = payload["event_type"] as String
         val webhookServiceProducedMessage = "Failed to process webhook event '$eventType': $internalServiceOriginalMessage"
-        // Esta é a mensagem FINAL que o Controller retorna no corpo da resposta
         val expectedControllerErrorMessage = "Failed to process event: $webhookServiceProducedMessage"
 
-        // O mock do service deve lançar a RuntimeException com a mensagem que o service *realmente* produziria.
         whenever(webhookService.processWebhookEvent(payload)).thenThrow(RuntimeException(webhookServiceProducedMessage))
 
         val response = webhookParkingController.receive(payload)
@@ -88,13 +84,10 @@ class WebhookParkingControllerTest {
     fun receiveShouldReturnServerErrorWhenGenericExceptionIsThrown() {
         val payload = mapOf("event_type" to "UNKNOWN_EVENT", "license_plate" to "XYZ7890")
         val internalServiceOriginalMessage = "An arbitrary error occurred in service"
-        val eventType = payload["event_type"] as String // "UNKNOWN_EVENT"
-        // Esta é a mensagem EXATA que o WebhookService produziria (encapsulando a original)
+        val eventType = payload["event_type"] as String
         val webhookServiceProducedMessage = "Failed to process webhook event '$eventType': $internalServiceOriginalMessage"
-        // Esta é a mensagem FINAL que o Controller retorna no corpo da resposta
         val expectedControllerErrorMessage = "Failed to process event: $webhookServiceProducedMessage"
 
-        // O mock do service deve lançar uma RuntimeException com a mensagem que o service *realmente* produziria.
         whenever(webhookService.processWebhookEvent(payload)).thenThrow(RuntimeException(webhookServiceProducedMessage))
 
         val response = webhookParkingController.receive(payload)

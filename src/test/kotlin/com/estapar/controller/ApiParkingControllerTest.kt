@@ -100,7 +100,8 @@ class ApiParkingControllerTest {
                     id = 1L,
                     sector = "Setor X",
                     lat = -23.5,
-                    lng = -46.6
+                    lng = -46.6,
+                    occupied = true
                 )
             )
         )

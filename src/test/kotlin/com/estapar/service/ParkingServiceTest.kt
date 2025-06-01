@@ -321,7 +321,7 @@ class ParkingServiceTest {
         val entryTime = Instant.now().minusSeconds(7200)
         val parkedTime = Instant.now().minusSeconds(3600)
         val sector = Sector(name = "Setor X", basePrice = 20.0, maxCapacity = 10, openHour = "08:00", closeHour = "22:00", durationLimitMinutes = 240, currentOcupied = 5)
-        val spot = Spot(lat = 10.0, lng = 20.0, ocupied = true, sector = sector)
+        val spot = Spot(id = 300L, lat = 10.0, lng = 20.0, ocupied = true, sector = sector)
         val garageEntry = Garage(licensePlate, entryTime, parkedTime, spot, null, "PARKED")
 
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.of(garageEntry))
@@ -342,7 +342,7 @@ class ParkingServiceTest {
         val licensePlate = "ENTERED123"
         val entryTime = Instant.now().minusSeconds(7200)
         val sector = Sector(name = "Setor Y", basePrice = 10.0, maxCapacity = 10, openHour = "08:00", closeHour = "22:00", durationLimitMinutes = 240, currentOcupied = 0)
-        val spot = Spot(lat = 30.0, lng = 40.0, ocupied = false, sector = sector)
+        val spot = Spot(id = 400L, lat = 30.0, lng = 40.0, ocupied = false, sector = sector)
         val garageEntry = Garage(licensePlate, entryTime, null, spot, null, "ENTRY")
 
         whenever(garageRepo.findById(licensePlate)).thenReturn(Optional.of(garageEntry))
@@ -383,7 +383,7 @@ class ParkingServiceTest {
         val entryTime = Instant.now().minusSeconds(7200)
         val parkedTime = Instant.now().minusSeconds(3600)
         val sector = Sector(name = "Setor X", basePrice = 20.0, maxCapacity = 10, openHour = "08:00", closeHour = "22:00", durationLimitMinutes = 240, currentOcupied = 5)
-        val spot = Spot(lat = lat, lng = lng, ocupied = true, sector = sector)
+        val spot = Spot(id = 500L, lat = lat, lng = lng, ocupied = true, sector = sector)
         val garageEntry = Garage(licensePlate, entryTime, parkedTime, spot, null, "PARKED")
 
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(spot)
@@ -405,7 +405,7 @@ class ParkingServiceTest {
         val lat = 10.0
         val lng = 20.0
         val sector = Sector(name = "Setor X", basePrice = 20.0, maxCapacity = 10, openHour = "08:00", closeHour = "22:00", durationLimitMinutes = 240, currentOcupied = 5)
-        val spot = Spot(lat = lat, lng = lng, ocupied = false, sector = sector)
+        val spot = Spot(id = 600L, lat = lat, lng = lng, ocupied = false, sector = sector)
 
         whenever(spotRepo.findByLatAndLng(lat, lng)).thenReturn(spot)
         whenever(garageRepo.findBySpotAndStatus(spot, "PARKED")).thenReturn(Optional.empty())
@@ -418,7 +418,7 @@ class ParkingServiceTest {
         assertNull(result.entryTime)
         assertNull(result.timeParked)
         verify(spotRepo).findByLatAndLng(lat, lng)
-        verify(garageRepo).findBySpotAndStatus(spot, "PARKED")
+        verify(garageRepo, never()).findBySpotAndStatus(any(), any())
     }
 
     @Test

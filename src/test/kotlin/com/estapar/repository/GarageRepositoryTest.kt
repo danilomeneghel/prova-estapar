@@ -33,7 +33,7 @@ class GarageRepositoryTest {
         testSector = Sector(name = "Test Sector", basePrice = 5.0, maxCapacity = 10, openHour = "06:00", closeHour = "22:00", durationLimitMinutes = 180)
         testSector = sectorRepository.save(testSector)
 
-        testSpot = Spot(lat = 10.0, lng = 20.0, ocupied = false, sector = testSector)
+        testSpot = Spot(id = 1L, lat = 10.0, lng = 20.0, ocupied = false, sector = testSector)
         testSpot = spotRepository.save(testSpot)
     }
 

@@ -222,7 +222,8 @@ open class ParkingService(
                 id = it.id,
                 sector = it.sector.name,
                 lat = it.lat,
-                lng = it.lng
+                lng = it.lng,
+                occupied = it.ocupied
             )
         }
 
