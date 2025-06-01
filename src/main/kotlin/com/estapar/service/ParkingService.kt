@@ -1,23 +1,20 @@
 package com.estapar.service
 
-import com.estapar.dto.GarageInfoDTO
-import com.estapar.dto.PlateStatusDTO
-import com.estapar.dto.RevenueDTO
-import com.estapar.dto.SectorInfo
-import com.estapar.dto.SpotInfo
-import com.estapar.dto.SpotStatusDTO
+import com.estapar.dto.*
 import com.estapar.model.Garage
 import com.estapar.model.Revenue
+import com.estapar.model.Sector
 import com.estapar.repository.GarageRepository
 import com.estapar.repository.RevenueRepository
 import com.estapar.repository.SectorRepository
 import com.estapar.repository.SpotRepository
 import io.micronaut.transaction.annotation.Transactional
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import org.slf4j.LoggerFactory
+import java.util.*
 
 @Singleton
 open class ParkingService(
@@ -228,5 +225,103 @@ open class ParkingService(
         }
 
         return GarageInfoDTO(garage = sectors, spots = spots)
+    }
+
+    open fun getAllSectorsInfo(): List<SectorInfo> {
+        return sectorRepo.findAll().map { sector ->
+            SectorInfo(
+                sector = sector.name,
+                basePrice = sector.basePrice,
+                maxCapacity = sector.maxCapacity,
+                openHour = sector.openHour.toString(),
+                closeHour = sector.closeHour.toString(),
+                durationLimitMinutes = sector.durationLimitMinutes
+            )
+        }
+    }
+
+    fun getAvailableSpotsCount(): Int {
+        return sectorRepo.findAll().sumOf { it.maxCapacity - it.currentOcupied }
+    }
+
+    fun getAllRevenues(): List<RevenueDTO> {
+        return revenueRepo.findAll().map { revenue ->
+            RevenueDTO(
+                amount = revenue.amount,
+                currency = "BRL",
+                timestamp = revenue.date.atStartOfDay(ZoneId.systemDefault()).toString()
+            )
+        }
+    }
+
+    @Transactional
+    open fun simulateSimulatorResponse(garageInfoDTO: GarageInfoDTO) {
+        garageInfoDTO.garage.forEach { sectorInfo ->
+            var sector = sectorRepo.findByName(sectorInfo.sector)
+            if (sector == null) {
+                sector = Sector(
+                    name = sectorInfo.sector,
+                    basePrice = sectorInfo.basePrice,
+                    maxCapacity = sectorInfo.maxCapacity,
+                    openHour = sectorInfo.openHour,
+                    closeHour = sectorInfo.closeHour,
+                    durationLimitMinutes = sectorInfo.durationLimitMinutes
+                )
+                sectorRepo.save(sector)
+            } else {
+                sector.basePrice = sectorInfo.basePrice
+                sector.maxCapacity = sectorInfo.maxCapacity
+                sector.openHour = sectorInfo.openHour
+                sector.closeHour = sectorInfo.closeHour
+                sector.durationLimitMinutes = sectorInfo.durationLimitMinutes
+                sectorRepo.update(sector)
+            }
+        }
+
+        garageInfoDTO.spots.forEach { spotInfo ->
+            spotInfo.id?.let { spotId ->
+                val spot = spotRepo.findById(spotId).orElse(null)
+                if (spot != null) {
+                    spot.ocupied = spotInfo.occupied
+                    spotRepo.save(spot)
+
+                    if (spotInfo.occupied) {
+                        val existingEntry = garageRepo.findBySpotAndStatus(spot, "ENTRY").orElse(null)
+                        if (existingEntry == null) {
+                            val newEntry = Garage(
+                                licensePlate = "SIMULATED-${UUID.randomUUID().toString().take(8)}",
+                                entryTime = Instant.now(),
+                                spot = spot,
+                                status = "PARKED",
+                                parkedTime = Instant.now()
+                            )
+                            garageRepo.save(newEntry)
+                            val sector = spot.sector
+                            sector.currentOcupied++
+                            sectorRepo.save(sector)
+                        }
+                    } else {
+                        val entry = garageRepo.findBySpotAndStatus(spot, "PARKED").orElse(null)
+                        if (entry != null) {
+                            handleExit(entry.licensePlate, Instant.now())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun getSectorInfo(sectorName: String): SectorInfo? {
+        val sector = sectorRepo.findByName(sectorName)
+        return sector?.let {
+            SectorInfo(
+                sector = it.name,
+                basePrice = it.basePrice,
+                maxCapacity = it.maxCapacity,
+                openHour = it.openHour.toString(),
+                closeHour = it.closeHour.toString(),
+                durationLimitMinutes = it.durationLimitMinutes
+            )
+        }
     }
 }

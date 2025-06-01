@@ -21,7 +21,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionWhenEventTypeIsMissing() {
-        val payload = mapOf("license_plate" to "ABC1234")
+        val payload: Map<String, Any> = mapOf("license_plate" to "ABC1234")
         val exception = assertThrows(IllegalArgumentException::class.java) {
             webhookService.processWebhookEvent(payload)
         }
@@ -33,7 +33,7 @@ class WebhookServiceTest {
     fun processWebhookEventShouldProcessEntryEventSuccessfully() {
         val licensePlate = "ABC1234"
         val entryTime = Instant.now()
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "ENTRY",
             "license_plate" to licensePlate,
             "entry_time" to entryTime.toString()
@@ -47,7 +47,7 @@ class WebhookServiceTest {
     @Test
     fun processWebhookEventShouldProcessEntryEventWithCurrentTimeWhenEntryTimeIsMissing() {
         val licensePlate = "ABC1234"
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "ENTRY",
             "license_plate" to licensePlate
         )
@@ -62,7 +62,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionForEntryEventWhenLicensePlateIsMissing() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "ENTRY",
             "entry_time" to Instant.now().toString()
         )
@@ -75,7 +75,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionForEntryEventWhenLicensePlateIsEmpty() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "ENTRY",
             "license_plate" to "",
             "entry_time" to Instant.now().toString()
@@ -89,7 +89,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowDateTimeParseExceptionForInvalidEntryTime() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "ENTRY",
             "license_plate" to "ABC1234",
             "entry_time" to "invalid-time"
@@ -105,7 +105,7 @@ class WebhookServiceTest {
         val licensePlate = "ABC1234"
         val lat = 10.0
         val lng = 20.0
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "PARKED",
             "license_plate" to licensePlate,
             "lat" to lat,
@@ -119,7 +119,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionForParkedEventWhenLicensePlateIsMissing() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "PARKED",
             "lat" to 10.0,
             "lng" to 20.0
@@ -133,7 +133,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionForParkedEventWhenLicensePlateIsEmpty() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "PARKED",
             "license_plate" to "",
             "lat" to 10.0,
@@ -148,7 +148,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionForParkedEventWhenLatIsMissing() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "PARKED",
             "license_plate" to "ABC1234",
             "lng" to 20.0
@@ -162,7 +162,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionForParkedEventWhenLngIsMissing() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "PARKED",
             "license_plate" to "ABC1234",
             "lat" to 10.0
@@ -178,7 +178,7 @@ class WebhookServiceTest {
     fun processWebhookEventShouldProcessExitEventSuccessfully() {
         val licensePlate = "ABC1234"
         val exitTime = Instant.now()
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "EXIT",
             "license_plate" to licensePlate,
             "exit_time" to exitTime.toString()
@@ -192,7 +192,7 @@ class WebhookServiceTest {
     @Test
     fun processWebhookEventShouldProcessExitEventWithCurrentTimeWhenExitTimeIsMissing() {
         val licensePlate = "ABC1234"
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "EXIT",
             "license_plate" to licensePlate
         )
@@ -214,8 +214,10 @@ class WebhookServiceTest {
             "exit_time" to exitTime.toString()
         )
         val exception = assertThrows(IllegalArgumentException::class.java) {
-            val filteredPayload = payloadWithNullLicensePlate.filterValues { it != null }
-            webhookService.processWebhookEvent(filteredPayload as Map<String, Any>)
+            val filteredPayload: Map<String, Any> = payloadWithNullLicensePlate
+                .filterValues { it != null }
+                .mapValues { it.value!! }
+            webhookService.processWebhookEvent(filteredPayload)
         }
         assertEquals("Missing or empty license_plate for EXIT event.", exception.message)
         verifyNoInteractions(parkingService)
@@ -224,7 +226,7 @@ class WebhookServiceTest {
     @Test
     fun processWebhookEventShouldThrowExceptionWhenLicensePlateIsEmptyForExitEvent() {
         val exitTime = Instant.now()
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "EXIT",
             "license_plate" to "",
             "exit_time" to exitTime.toString()
@@ -238,7 +240,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowDateTimeParseExceptionForInvalidExitTime() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "EXIT",
             "license_plate" to "ABC1234",
             "exit_time" to "invalid-time"
@@ -251,7 +253,7 @@ class WebhookServiceTest {
 
     @Test
     fun processWebhookEventShouldThrowExceptionForUnknownEventType() {
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "UNKNOWN_EVENT",
             "license_plate" to "ABC1234"
         )
@@ -266,7 +268,7 @@ class WebhookServiceTest {
     fun processWebhookEventShouldThrowRuntimeExceptionWhenParkingServiceFails() {
         val licensePlate = "ABC1234"
         val entryTime = Instant.now()
-        val payload = mapOf(
+        val payload: Map<String, Any> = mapOf(
             "event_type" to "ENTRY",
             "license_plate" to licensePlate,
             "entry_time" to entryTime.toString()

@@ -86,6 +86,14 @@ micronaut {
     }
 }
 
+allOpen {
+    annotation("io.micronaut.aop.Around")
+    annotation("io.micronaut.runtime.event.annotation.EventListener")
+    annotation("io.micronaut.context.annotation.Executable")
+    annotation("jakarta.inject.Singleton")
+    annotation("io.micronaut.transaction.annotation.Transactional")
+}
+
 tasks.named("dockerfileNative") {
     jdkVersion = "21"
 }

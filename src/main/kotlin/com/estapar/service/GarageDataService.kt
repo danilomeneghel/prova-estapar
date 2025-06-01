@@ -10,23 +10,23 @@ import com.estapar.repository.SpotRepository
 import io.micronaut.context.annotation.Value
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
+import io.micronaut.http.client.annotation.Client
 import io.micronaut.runtime.event.annotation.EventListener
 import io.micronaut.runtime.server.event.ServerStartupEvent
 import io.micronaut.transaction.annotation.Transactional
 import jakarta.inject.Singleton
 import java.time.Instant
 import org.slf4j.LoggerFactory
-import java.net.URL
 import java.lang.Thread
 
 @Singleton
-open class GarageDataService(
+class GarageDataService(
     private val garageRepository: GarageRepository,
     private val spotRepository: SpotRepository,
     private val sectorRepository: SectorRepository,
-    @Value("\${garage.simulator.url}") private val simulatorUrl: String
+    @Value("\${garage.simulator.url}") private val simulatorUrl: String,
+    @Client("\${garage.simulator.url}") private val httpClient: HttpClient
 ) {
-    private val httpClient: HttpClient = HttpClient.create(URL(simulatorUrl))
     private val LOG = LoggerFactory.getLogger(GarageDataService::class.java)
 
     init {
@@ -34,7 +34,7 @@ open class GarageDataService(
     }
 
     @EventListener
-    fun onStartup(@Suppress("UNUSED_PARAMETER") event: ServerStartupEvent) {
+    fun onStartup(event: ServerStartupEvent) {
         LOG.info("Server started, fetching garage data from simulator...")
         try {
             Thread.sleep(5000)
@@ -47,7 +47,7 @@ open class GarageDataService(
     }
 
     @Transactional
-    open fun fetchAndSaveGarageData() {
+    fun fetchAndSaveGarageData() {
         try {
             val request = HttpRequest.GET<Any>("/garage")
             val garageInfoDTO: GarageInfoDTO = httpClient.toBlocking().retrieve(request, GarageInfoDTO::class.java)
@@ -143,8 +143,6 @@ open class GarageDataService(
         } catch (e: Exception) {
             LOG.error("Error fetching or saving garage data: ${e.message}", e)
             throw e
-        } finally {
-            httpClient.close()
         }
     }
 }

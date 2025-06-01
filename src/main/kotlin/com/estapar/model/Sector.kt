@@ -9,11 +9,11 @@ data class Sector(
     var id: Long? = null,
     @Column(nullable = false)
     val name: String,
-    val basePrice: Double,
-    val maxCapacity: Int,
-    val openHour: String,
-    val closeHour: String,
-    val durationLimitMinutes: Int,
+    var basePrice: Double,
+    var maxCapacity: Int,
+    var openHour: String,
+    var closeHour: String,
+    var durationLimitMinutes: Int,
     var currentOcupied: Int = 0
 ) {
     constructor() : this(null, "", 0.0, 0, "", "", 0, 0)
