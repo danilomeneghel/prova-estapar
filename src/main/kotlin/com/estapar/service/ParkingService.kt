@@ -79,8 +79,6 @@ open class ParkingService(
         sector.currentOcupied++
         val savedSector = sectorRepo.save(sector)
         LOG.info("ParkingService: Sector {} current occupied count incremented to {}.", savedSector.name, savedSector.currentOcupied)
-
-        LOG.info("ParkingService: Successfully processed for plate {}.", plate)
     }
 
     @Transactional

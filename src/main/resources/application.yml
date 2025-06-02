@@ -37,12 +37,11 @@ jpa:
 
 garage:
   simulator:
-    url: http://garage-simulator:3000
+    url: http://garage-simulator:3001
 
 logger:
   levels:
-    io.micronaut.data.repository.jpa.kotlin: DEBUG
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    io.micronaut.http.client: TRACE
-    io.netty: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    io.micronaut.data: TRACE
