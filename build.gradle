@@ -35,6 +35,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     implementation("io.micronaut:micronaut-http-client")
+    implementation("io.projectreactor:reactor-core")
     compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -48,6 +49,7 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("com.h2database:h2")
+    testImplementation("io.projectreactor:reactor-test")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
