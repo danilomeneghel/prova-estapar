@@ -37,7 +37,7 @@ jpa:
 
 garage:
   simulator:
-    url: http://garage-simulator:3001
+    url: http://garage-simulator:3000
 
 logger:
   levels:

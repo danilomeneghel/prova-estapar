@@ -26,13 +26,13 @@ services:
   garage-simulator:
     image: cfontes0estapar/garage-sim:1.0.0
     ports:
-      - "3001:3000"
+      - "3000:3000"
     networks:
       - app-network
     environment:
       - WEBHOOK_URL=http://app_estapar:3003/webhook
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3001/garage" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/garage" ]
       interval: 10s
       timeout: 5s
       retries: 5
