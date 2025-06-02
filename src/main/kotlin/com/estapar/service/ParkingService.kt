@@ -99,7 +99,6 @@ open class ParkingService(
         }
         LOG.debug("ParkingService: Found Garage for plate: {}", plate)
 
-        var totalRevenueAmount: Double
         val spot = entry.spot
 
         if (spot == null) {
@@ -125,7 +124,7 @@ open class ParkingService(
                 lotPercent < 0.75 -> totalCalculatedPrice * 1.1
                 else -> totalCalculatedPrice * 1.25
             }
-            totalRevenueAmount = finalPrice
+            val totalRevenueAmount = finalPrice
             LOG.info("ParkingService: Calculated final revenue amount for plate {}: {:.2f}", plate, totalRevenueAmount)
 
             val date = LocalDate.ofInstant(exitTime, ZoneId.systemDefault())
@@ -282,29 +281,38 @@ open class ParkingService(
             spotInfo.id?.let { spotId ->
                 val spot = spotRepo.findById(spotId).orElse(null)
                 if (spot != null) {
-                    spot.ocupied = spotInfo.occupied
-                    spotRepo.save(spot)
+                    if (spot.ocupied != spotInfo.occupied) {
+                        spot.ocupied = spotInfo.occupied
+                        spotRepo.save(spot)
 
-                    if (spotInfo.occupied) {
-                        val existingEntry = garageRepo.findBySpotAndStatus(spot, "ENTRY").orElse(null)
-                        if (existingEntry == null) {
-                            val newEntry = Garage(
-                                licensePlate = "SIMULATED-${UUID.randomUUID().toString().take(8)}",
-                                entryTime = Instant.now(),
-                                spot = spot,
-                                status = "PARKED",
-                                parkedTime = Instant.now()
-                            )
-                            garageRepo.save(newEntry)
-                            val sector = spot.sector
-                            sector.currentOcupied++
-                            sectorRepo.save(sector)
+                        if (spotInfo.occupied) {
+                            val existingEntry = garageRepo.findBySpotAndStatus(spot, "PARKED").orElse(null)
+                            if (existingEntry == null) {
+                                val newEntry = Garage(
+                                    licensePlate = "SIMULATED-${UUID.randomUUID().toString().take(8)}",
+                                    entryTime = Instant.now(),
+                                    spot = spot,
+                                    status = "PARKED",
+                                    parkedTime = Instant.now()
+                                )
+                                garageRepo.save(newEntry)
+                                val sector = spot.sector
+                                sector.currentOcupied++
+                                sectorRepo.save(sector)
+                            }
+                        } else {
+                            val entry = garageRepo.findBySpotAndStatus(spot, "PARKED").orElse(null)
+                            if (entry != null) {
+                                handleExit(entry.licensePlate, Instant.now())
+                            }
                         }
-                    } else {
-                        val entry = garageRepo.findBySpotAndStatus(spot, "PARKED").orElse(null)
-                        if (entry != null) {
-                            handleExit(entry.licensePlate, Instant.now())
-                        }
+                    }
+
+                    if (spot.lat != spotInfo.lat || spot.lng != spotInfo.lng || spot.sector.name != spotInfo.sector) {
+                        spot.lat = spotInfo.lat
+                        spot.lng = spotInfo.lng
+                        spot.sector = sectorRepo.findByName(spotInfo.sector)!!
+                        spotRepo.save(spot)
                     }
                 }
             }

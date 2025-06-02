@@ -6,6 +6,7 @@ import io.micronaut.serde.annotation.Serdeable
 @Serdeable
 data class SectorInfo(
     val sector: String,
+    @field:JsonProperty("base_price")
     val basePrice: Double,
     @field:JsonProperty("max_capacity")
     val maxCapacity: Int,

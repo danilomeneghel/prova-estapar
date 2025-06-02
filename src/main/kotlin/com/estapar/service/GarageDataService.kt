@@ -18,6 +18,8 @@ import jakarta.inject.Singleton
 import java.time.Instant
 import org.slf4j.LoggerFactory
 import java.lang.Thread
+import java.util.UUID
+import io.micronaut.scheduling.annotation.Scheduled
 
 @Singleton
 class GarageDataService(
@@ -25,7 +27,8 @@ class GarageDataService(
     private val spotRepository: SpotRepository,
     private val sectorRepository: SectorRepository,
     @Value("\${garage.simulator.url}") private val simulatorUrl: String,
-    @Client("\${garage.simulator.url}") private val httpClient: HttpClient
+    @Client("\${garage.simulator.url}") private val httpClient: HttpClient,
+    private val parkingService: ParkingService
 ) {
     private val LOG = LoggerFactory.getLogger(GarageDataService::class.java)
 
@@ -46,6 +49,7 @@ class GarageDataService(
         fetchAndSaveGarageData()
     }
 
+    @Scheduled(fixedDelay = "2s")
     @Transactional
     fun fetchAndSaveGarageData() {
         try {
@@ -64,9 +68,15 @@ class GarageDataService(
                         durationLimitMinutes = sectorInfo.durationLimitMinutes
                     )
                     sectorRepository.save(newSector)
-                    LOG.info("Saved new sector: ${newSector.name}")
+                    LOG.info("Saved new sector: ${newSector.name} with basePrice: ${newSector.basePrice}")
                 } else {
-                    LOG.info("Sector ${existingSector.name} already exists. Skipping save.")
+                    existingSector.basePrice = sectorInfo.basePrice
+                    existingSector.maxCapacity = sectorInfo.maxCapacity
+                    existingSector.openHour = sectorInfo.openHour
+                    existingSector.closeHour = sectorInfo.closeHour
+                    existingSector.durationLimitMinutes = sectorInfo.durationLimitMinutes
+                    sectorRepository.update(existingSector)
+                    LOG.info("Updated existing sector: ${existingSector.name} with basePrice: ${existingSector.basePrice}")
                 }
             }
 
@@ -76,6 +86,7 @@ class GarageDataService(
                 val existingSpotOptional = spotRepository.findById(spotId)
                 var spot: Spot
                 var isNewSpot = false
+                var needsUpdate = false
 
                 if (existingSpotOptional.isEmpty) {
                     val sector: Sector = sectorRepository.findByName(spotInfo.sector)
@@ -89,52 +100,64 @@ class GarageDataService(
                         ocupied = spotInfo.occupied
                     )
                     isNewSpot = true
+                    needsUpdate = true
                 } else {
                     spot = existingSpotOptional.get()
-                    if (spot.lat != spotInfo.lat || spot.lng != spotInfo.lng || spot.ocupied != spotInfo.occupied || spot.sector.name != spotInfo.sector) {
+                    val sector: Sector = sectorRepository.findByName(spotInfo.sector)
+                        ?: throw IllegalStateException("Sector ${spotInfo.sector} not found for spot ID: ${spotId} during spot update.")
+
+                    if (spot.ocupied != spotInfo.occupied) {
+                        spot.ocupied = spotInfo.occupied
+                        needsUpdate = true
+                    }
+
+                    if (spot.lat != spotInfo.lat || spot.lng != spotInfo.lng || spot.sector.name != spotInfo.sector) {
                         spot.lat = spotInfo.lat
                         spot.lng = spotInfo.lng
-                        spot.ocupied = spotInfo.occupied
-                        val sector: Sector = sectorRepository.findByName(spotInfo.sector)
-                            ?: throw IllegalStateException("Sector ${spotInfo.sector} not found for spot ID: ${spotId} during spot update.")
                         spot.sector = sector
-                    } else {
-                        LOG.info("Spot ${spot.id} already exists and is up-to-date. Skipping update.")
+                        needsUpdate = true
+                    }
+
+                    if (!needsUpdate) {
+                        LOG.debug("Spot ${spot.id} already exists and is up-to-date. Skipping update.")
                     }
                 }
 
-                val savedSpot = spotRepository.save(spot)
-                if (isNewSpot) {
-                    LOG.info("Saved new spot: ${savedSpot.id}")
-                } else {
-                    LOG.info("Updated existing spot: ${savedSpot.id}")
-                }
-
-                if (savedSpot.ocupied) {
-                    val existingGarageEntry = garageRepository.findBySpotAndStatus(savedSpot, "ENTRY")
-                    if (existingGarageEntry.isEmpty) {
-                        val garage = Garage(
-                            licensePlate = "SIMULATED-${savedSpot.id}",
-                            entryTime = Instant.now(),
-                            spot = savedSpot,
-                            status = "ENTRY"
-                        )
-                        garageRepository.save(garage)
-                        LOG.info("Saved new garage entry for spot ID: ${savedSpot.id}, License Plate: ${garage.licensePlate}")
+                if (needsUpdate) {
+                    val savedSpot = spotRepository.save(spot)
+                    if (isNewSpot) {
+                        LOG.info("Saved new spot: ${savedSpot.id}")
                     } else {
-                        LOG.info("Garage entry for spot ID: ${savedSpot.id} with status 'ENTRY' already exists. Skipping save.")
+                        LOG.info("Updated existing spot: ${savedSpot.id}")
                     }
-                } else {
-                    val existingGarageEntry = garageRepository.findBySpotAndStatus(savedSpot, "ENTRY")
-                    if (existingGarageEntry.isPresent) {
-                        val garageToExit = existingGarageEntry.get()
-                        garageToExit.exitTime = Instant.now()
-                        garageToExit.status = "EXIT"
-                        garageToExit.spot = null
-                        garageRepository.update(garageToExit)
-                        LOG.info("Marked existing garage entry for spot ID: ${savedSpot.id} as EXIT (Simulator now shows unoccupied).")
+
+                    if (savedSpot.ocupied) {
+                        val existingGarageEntry = garageRepository.findBySpotAndStatus(savedSpot, "PARKED")
+                        if (existingGarageEntry.isEmpty) {
+                            val garage = Garage(
+                                licensePlate = "SIMULATED-${savedSpot.id}-${UUID.randomUUID().toString().take(4)}",
+                                entryTime = Instant.now(),
+                                parkedTime = Instant.now(),
+                                spot = savedSpot,
+                                status = "PARKED"
+                            )
+                            garageRepository.save(garage)
+                            val sector = savedSpot.sector
+                            sector.currentOcupied++
+                            sectorRepository.save(sector)
+                            LOG.info("Saved new garage entry for spot ID: ${savedSpot.id}, License Plate: ${garage.licensePlate}. Sector occupied count incremented.")
+                        } else {
+                            LOG.debug("Garage entry for spot ID: ${savedSpot.id} with status 'PARKED' already exists. Skipping new entry.")
+                        }
                     } else {
-                        LOG.info("Spot ${savedSpot.id} is unoccupied, and no active 'ENTRY' record found. Skipping exit processing.")
+                        val existingGarageEntry = garageRepository.findBySpotAndStatus(savedSpot, "PARKED")
+                        if (existingGarageEntry.isPresent) {
+                            val garageToExit = existingGarageEntry.get()
+                            parkingService.handleExit(garageToExit.licensePlate, Instant.now())
+                            LOG.info("Handled exit for garage entry for spot ID: ${savedSpot.id} (Simulator now shows unoccupied).")
+                        } else {
+                            LOG.debug("Spot ${savedSpot.id} is unoccupied, and no active 'PARKED' record found. Skipping exit processing.")
+                        }
                     }
                 }
             }
@@ -142,7 +165,6 @@ class GarageDataService(
 
         } catch (e: Exception) {
             LOG.error("Error fetching or saving garage data: ${e.message}", e)
-            throw e
         }
     }
 }
