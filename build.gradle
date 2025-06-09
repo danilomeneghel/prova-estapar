@@ -50,6 +50,7 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("com.h2database:h2")
     testImplementation("io.projectreactor:reactor-test")
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 

@@ -24,15 +24,10 @@ class GarageDataService(
     private val garageRepository: GarageRepository,
     private val spotRepository: SpotRepository,
     private val sectorRepository: SectorRepository,
-    @Value("\${garage.simulator.url}") private val simulatorUrl: String,
     @Client("\${garage.simulator.url}") private val httpClient: HttpClient,
     private val parkingService: ParkingService
 ) {
     private val LOG = LoggerFactory.getLogger(GarageDataService::class.java)
-
-    init {
-        LOG.info("HttpClient initialized with URL: $simulatorUrl")
-    }
 
     @EventListener
     fun onStartup(event: ServerStartupEvent) {
